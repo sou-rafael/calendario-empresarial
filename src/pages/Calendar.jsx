@@ -242,23 +242,18 @@ export default function Calendar() {
             </button>
           </div>
 
-          {totalMonth > 0 && (
-            <div style={{
-              background: 'rgba(239, 68, 68, 0.15)',
-              color: '#fca5a5',
-              padding: '0.5rem 1rem',
-              borderRadius: 'var(--radius-md)',
-              fontWeight: 600,
-              border: '1px solid rgba(239, 68, 68, 0.3)',
-              fontSize: '1.1rem'
-            }}>
-              Total Mês: R$ {totalMonth.toFixed(2).replace('.', ',')}
-            </div>
-          )}
+          <div style={{
+            background: 'rgba(239, 68, 68, 0.15)',
+            color: '#fca5a5',
+            padding: '0.5rem 1rem',
+            borderRadius: 'var(--radius-md)',
+            fontWeight: 600,
+            border: '1px solid rgba(239, 68, 68, 0.3)',
+            fontSize: '1.1rem'
+          }}>
+            Total Mês: R$ {totalMonth.toFixed(2).replace('.', ',')}
+          </div>
 
-          <button onClick={() => setIsBillModalOpen(true)} className="btn btn-primary">
-            <Plus size={18} /> Adicionar Conta
-          </button>
           <button onClick={toggleTheme} className="btn btn-secondary" style={{ padding: '0.5rem 1rem' }} title="Alternar Tema">
             {isLightMode ? <Moon size={18} /> : <Sun size={18} />}
           </button>
@@ -290,6 +285,7 @@ export default function Calendar() {
         selectedDate={selectedDate}
         user={user}
         categories={categories}
+        bills={bills}
         onBillSaved={fetchBills}
       />
 
