@@ -119,7 +119,7 @@ export default function Calendar() {
       ? bills.filter(b => b.category_id === filterCategoryId)
       : bills;
 
-    const totalMonthlyAmount = filteredBills.reduce((acc, bill) => acc + Number(bill.amount), 0);
+
 
     daysInterval.forEach(currentDay => {
       const formattedDate = format(currentDay, "d");
@@ -196,8 +196,10 @@ export default function Calendar() {
   };
 
   // Cálculo rápido para renderizar o total no cabeçalho sem precisar calcular tudo de novo
+  const currentMonthPrefix = format(currentDate, 'yyyy-MM');
   const currentFilteredBills = filterCategoryId ? bills.filter(b => b.category_id === filterCategoryId) : bills;
-  const totalMonth = currentFilteredBills.reduce((acc, bill) => acc + Number(bill.amount), 0);
+  const currentMonthBills = currentFilteredBills.filter(b => b.date && b.date.startsWith(currentMonthPrefix));
+  const totalMonth = currentMonthBills.reduce((acc, bill) => acc + Number(bill.amount), 0);
 
   return (
     <div style={{ padding: '2rem', maxWidth: '1400px', margin: '0 auto', display: 'flex', flexDirection: 'column', height: '100vh' }}>
