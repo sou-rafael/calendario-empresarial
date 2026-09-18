@@ -3,7 +3,11 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './components/AuthProvider';
 import ProtectedRoute from './components/ProtectedRoute';
 import Login from './pages/Login';
-import Calendar from './pages/Calendar';
+import Layout from './components/Layout';
+import CalendarView from './pages/CalendarView';
+import ListView from './pages/ListView';
+import DreView from './pages/DreView';
+import DashboardView from './pages/DashboardView';
 
 function App() {
   return (
@@ -15,10 +19,15 @@ function App() {
             path="/" 
             element={
               <ProtectedRoute>
-                <Calendar />
+                <Layout />
               </ProtectedRoute>
             } 
-          />
+          >
+            <Route index element={<CalendarView />} />
+            <Route path="list" element={<ListView />} />
+            <Route path="dre" element={<DreView />} />
+            <Route path="dashboard" element={<DashboardView />} />
+          </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>

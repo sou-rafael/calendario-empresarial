@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { X, Trash2, Plus } from 'lucide-react';
 
-export default function CategoryModal({ isOpen, onClose, user, categories, onCategoriesUpdated }) {
+export default function CategoryModal({ isOpen, onClose, user, categories, onCategoriesUpdated, currentContext }) {
   const [newCategoryName, setNewCategoryName] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -15,7 +15,7 @@ export default function CategoryModal({ isOpen, onClose, user, categories, onCat
     setLoading(true);
     try {
       const { error } = await supabase.from('categories').insert([
-        { user_id: user.id, name: newCategoryName }
+        { user_id: user.id, name: newCategoryName, context: currentContext }
       ]);
       if (error) throw error;
       setNewCategoryName('');
@@ -76,8 +76,8 @@ export default function CategoryModal({ isOpen, onClose, user, categories, onCat
             categories.map(cat => (
               <div key={cat.id} style={{ 
                 display: 'flex', justifyContent: 'space-between', alignItems: 'center', 
-                padding: '10px 12px', background: 'rgba(255,255,255,0.02)', 
-                border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)' 
+                padding: '10px 12px', background: 'var(--item-bg)', 
+                border: '1px solid var(--item-border)', borderRadius: 'var(--radius-md)' 
               }}>
                 <span style={{ fontSize: '0.95rem', color: 'var(--text-primary)' }}>{cat.name}</span>
                 <button 

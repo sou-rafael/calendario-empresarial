@@ -9,6 +9,8 @@ import {
 import { ptBR } from 'date-fns/locale';
 import BillModal from '../components/BillModal';
 import CategoryModal from '../components/CategoryModal';
+import Sidebar from '../components/Sidebar';
+import MiniDashboard from '../components/MiniDashboard';
 
 export default function Calendar() {
   const { user } = useAuth();
@@ -21,12 +23,12 @@ export default function Calendar() {
   const [filterCategoryId, setFilterCategoryId] = useState('');
   
   // UI States
+  const [currentContext, setCurrentContext] = useState('empresarial');
   const [isBillModalOpen, setIsBillModalOpen] = useState(false);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [isLightMode, setIsLightMode] = useState(false);
 
   useEffect(() => {
-    fetchCategories();
     // Verifica tema salvo ou preferência do sistema
     const savedTheme = localStorage.getItem('theme');
     if (savedTheme === 'light') {
@@ -37,22 +39,34 @@ export default function Calendar() {
 
   useEffect(() => {
     fetchBills();
-  }, [currentDate]);
+    fetchCategories();
+  }, [currentDate, currentContext]);
 
   const fetchCategories = async () => {
     if (!user) return;
-    const { data } = await supabase.from('categories').select('*');
+    const { data } = await supabase.from('categories').select('*').eq('context', currentContext);
     
     if (data && data.length === 0) {
-      // Inserir categorias padrão
-      const defaults = [
-        { user_id: user.id, name: 'Produtos' },
-        { user_id: user.id, name: 'Impostos' },
-        { user_id: user.id, name: 'Folha' },
-        { user_id: user.id, name: 'Custos Fixos' }
+      const defaults = currentContext === 'empresarial' ? [
+        { user_id: user.id, name: 'Fornecedores', context: currentContext },
+        { user_id: user.id, name: 'Ponto Comercial', context: currentContext },
+        { user_id: user.id, name: 'Pessoal', context: currentContext },
+        { user_id: user.id, name: 'Impostos', context: currentContext },
+        { user_id: user.id, name: 'Vendas e Logística', context: currentContext },
+        { user_id: user.id, name: 'Marketing', context: currentContext },
+        { user_id: user.id, name: 'Administrativo', context: currentContext }
+      ] : [
+        { user_id: user.id, name: 'Moradia', context: currentContext },
+        { user_id: user.id, name: 'Educação', context: currentContext },
+        { user_id: user.id, name: 'Saúde', context: currentContext },
+        { user_id: user.id, name: 'Cartão de Crédito', context: currentContext },
+        { user_id: user.id, name: 'Veículos', context: currentContext },
+        { user_id: user.id, name: 'Alimentação', context: currentContext },
+        { user_id: user.id, name: 'Finanças', context: currentContext },
+        { user_id: user.id, name: 'Lazer', context: currentContext }
       ];
       await supabase.from('categories').insert(defaults);
-      const { data: newData } = await supabase.from('categories').select('*');
+      const { data: newData } = await supabase.from('categories').select('*').eq('context', currentContext);
       setCategories(newData || []);
     } else {
       setCategories(data || []);
@@ -67,6 +81,7 @@ export default function Calendar() {
     const { data } = await supabase
       .from('bills')
       .select('*')
+      .eq('context', currentContext)
       .gte('date', start)
       .lte('date', end);
       
@@ -131,7 +146,8 @@ export default function Calendar() {
 
       // Soma das contas do dia
       const dayBills = filteredBills.filter(b => b.date === dayString);
-      const totalAmount = dayBills.reduce((acc, bill) => acc + Number(bill.amount), 0);
+      const receitas = dayBills.filter(b => b.type === 'receita').reduce((acc, bill) => acc + Number(bill.amount), 0);
+      const despesas = dayBills.filter(b => b.type === 'despesa' || !b.type).reduce((acc, bill) => acc + Number(bill.amount), 0);
 
       days.push(
         <div
@@ -160,23 +176,38 @@ export default function Calendar() {
           </div>
           
           {/* Somatório de Contas */}
-          <div style={{ flex: 1, marginTop: '8px', fontSize: '0.85rem', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-            {totalAmount > 0 && (
+          <div style={{ flex: 1, marginTop: '8px', fontSize: '0.85rem', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', gap: '4px' }}>
+            {receitas > 0 && (
               <div style={{
-                background: 'rgba(239, 68, 68, 0.1)',
-                color: '#fca5a5',
-                padding: '4px 8px',
+                background: 'rgba(16, 185, 129, 0.1)',
+                color: '#86efac',
+                padding: '2px 6px',
                 borderRadius: '4px',
                 fontWeight: 600,
                 textAlign: 'right',
-                border: '1px solid rgba(239, 68, 68, 0.2)'
+                border: '1px solid rgba(16, 185, 129, 0.2)',
+                fontSize: '0.8rem'
               }}>
-                R$ {totalAmount.toFixed(2).replace('.', ',')}
+                + R$ {receitas.toFixed(2).replace('.', ',')}
+              </div>
+            )}
+            {despesas > 0 && (
+              <div style={{
+                background: 'rgba(239, 68, 68, 0.1)',
+                color: '#fca5a5',
+                padding: '2px 6px',
+                borderRadius: '4px',
+                fontWeight: 600,
+                textAlign: 'right',
+                border: '1px solid rgba(239, 68, 68, 0.2)',
+                fontSize: '0.8rem'
+              }}>
+                - R$ {despesas.toFixed(2).replace('.', ',')}
               </div>
             )}
             {dayBills.length > 0 && (
-              <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textAlign: 'right', marginTop: '4px' }}>
-                {dayBills.length} {dayBills.length === 1 ? 'conta' : 'contas'}
+              <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textAlign: 'right', marginTop: '2px' }}>
+                {dayBills.length} {dayBills.length === 1 ? 'lançamento' : 'lançamentos'}
               </div>
             )}
           </div>
@@ -195,14 +226,11 @@ export default function Calendar() {
     );
   };
 
-  // Cálculo rápido para renderizar o total no cabeçalho sem precisar calcular tudo de novo
-  const currentMonthPrefix = format(currentDate, 'yyyy-MM');
-  const currentFilteredBills = filterCategoryId ? bills.filter(b => b.category_id === filterCategoryId) : bills;
-  const currentMonthBills = currentFilteredBills.filter(b => b.date && b.date.startsWith(currentMonthPrefix));
-  const totalMonth = currentMonthBills.reduce((acc, bill) => acc + Number(bill.amount), 0);
 
   return (
-    <div style={{ padding: '2rem', maxWidth: '1400px', margin: '0 auto', display: 'flex', flexDirection: 'column', height: '100vh' }}>
+    <div className="app-layout">
+      <Sidebar currentContext={currentContext} setContext={setCurrentContext} />
+      <div className="main-area">
       
       <header style={{ 
         display: 'flex', justifyContent: 'space-between', alignItems: 'center', 
@@ -244,17 +272,7 @@ export default function Calendar() {
             </button>
           </div>
 
-          <div style={{
-            background: 'rgba(239, 68, 68, 0.15)',
-            color: '#fca5a5',
-            padding: '0.5rem 1rem',
-            borderRadius: 'var(--radius-md)',
-            fontWeight: 600,
-            border: '1px solid rgba(239, 68, 68, 0.3)',
-            fontSize: '1.1rem'
-          }}>
-            Total Mês: R$ {totalMonth.toFixed(2).replace('.', ',')}
-          </div>
+
 
           <button onClick={toggleTheme} className="btn btn-secondary" style={{ padding: '0.5rem 1rem' }} title="Alternar Tema">
             {isLightMode ? <Moon size={18} /> : <Sun size={18} />}
@@ -265,21 +283,15 @@ export default function Calendar() {
         </div>
       </header>
 
-      <main style={{ 
-        flex: 1, 
-        padding: '1.5rem', 
-        display: 'flex', 
-        flexDirection: 'column',
-        backgroundColor: 'var(--calendar-bg)',
-        borderRadius: 'var(--radius-lg)',
-        border: '1px solid var(--border-color)',
-        boxShadow: 'var(--shadow-md)'
-      }}>
+      <main style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
         {renderDaysOfWeek()}
         <div style={{ flex: 1, overflowY: 'auto' }}>
           {renderCells()}
         </div>
       </main>
+      </div>
+
+      <MiniDashboard bills={bills} currentDate={currentDate} categories={categories} currentContext={currentContext} />
 
       <BillModal 
         isOpen={isBillModalOpen} 
@@ -289,6 +301,7 @@ export default function Calendar() {
         categories={categories}
         bills={bills}
         onBillSaved={fetchBills}
+        currentContext={currentContext}
       />
 
       <CategoryModal
@@ -297,6 +310,7 @@ export default function Calendar() {
         user={user}
         categories={categories}
         onCategoriesUpdated={fetchCategories}
+        currentContext={currentContext}
       />
 
     </div>
