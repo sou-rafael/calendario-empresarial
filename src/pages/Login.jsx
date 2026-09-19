@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
+import { useNavigate, Navigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { LogIn, UserPlus, AlertCircle } from 'lucide-react';
+import { useAuth } from '../components/AuthProvider';
 
 export default function Login() {
   const [isLogin, setIsLogin] = useState(true);
@@ -8,6 +10,12 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const navigate = useNavigate();
+  const { user } = useAuth();
+
+  if (user) {
+    return <Navigate to="/" replace />;
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -18,6 +26,7 @@ export default function Login() {
       if (isLogin) {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
+        navigate('/');
       } else {
         const { error } = await supabase.auth.signUp({ email, password });
         if (error) throw error;
