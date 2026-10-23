@@ -231,7 +231,7 @@ export default function Calendar() {
 
   return (
     <div className="app-layout">
-      <Sidebar currentContext={currentContext} setContext={setCurrentContext} />
+      <Sidebar currentContext={currentContext} setContext={setCurrentContext} onOpenImport={() => setIsBoletoModalOpen(true)} />
       <div className="main-area">
       
       <header style={{ 
