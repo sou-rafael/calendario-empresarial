@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../components/AuthProvider';
 import { supabase } from '../lib/supabase';
-import { LogOut, ChevronLeft, ChevronRight, Plus, Filter, Settings, Sun, Moon } from 'lucide-react';
+import { LogOut, ChevronLeft, ChevronRight, Plus, Filter, Settings, Sun, Moon, UploadCloud } from 'lucide-react';
 import { 
   format, addMonths, subMonths, startOfMonth, endOfMonth, 
   startOfWeek, endOfWeek, isSameMonth, isSameDay, addDays, eachDayOfInterval
 } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import BillModal from '../components/BillModal';
+import BoletoImportModal from '../components/BoletoImportModal';
 import CategoryModal from '../components/CategoryModal';
 import Sidebar from '../components/Sidebar';
 import MiniDashboard from '../components/MiniDashboard';
@@ -25,6 +26,7 @@ export default function Calendar() {
   // UI States
   const [currentContext, setCurrentContext] = useState('empresarial');
   const [isBillModalOpen, setIsBillModalOpen] = useState(false);
+  const [isBoletoModalOpen, setIsBoletoModalOpen] = useState(false);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [isLightMode, setIsLightMode] = useState(false);
 
@@ -274,6 +276,22 @@ export default function Calendar() {
 
 
 
+          <button 
+            onClick={() => setIsBoletoModalOpen(true)} 
+            className="btn btn-primary" 
+            style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '6px', 
+              background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
+              boxShadow: '0 4px 12px rgba(79, 70, 229, 0.3)',
+              fontWeight: 600
+            }}
+          >
+            <UploadCloud size={17} />
+            Importar Boleto
+          </button>
+
           <button onClick={toggleTheme} className="btn btn-secondary" style={{ padding: '0.5rem 1rem' }} title="Alternar Tema">
             {isLightMode ? <Moon size={18} /> : <Sun size={18} />}
           </button>
@@ -292,6 +310,14 @@ export default function Calendar() {
       </div>
 
       <MiniDashboard bills={bills} currentDate={currentDate} categories={categories} currentContext={currentContext} />
+
+      <BoletoImportModal
+        isOpen={isBoletoModalOpen}
+        onClose={() => setIsBoletoModalOpen(false)}
+        user={user}
+        categories={categories}
+        onImportSuccess={fetchBills}
+      />
 
       <BillModal 
         isOpen={isBillModalOpen} 

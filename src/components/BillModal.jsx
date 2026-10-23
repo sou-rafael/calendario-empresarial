@@ -1,83 +1,73 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { X, Plus, Check } from 'lucide-react';
+import { X, Check, Copy, FileText, ExternalLink, Paperclip } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
-export default function BillModal({ isOpen, onClose, selectedDate, user, categories, bills = [], onBillSaved, currentContext, billToEdit = null }) {
+export default function BillModal({ isOpen, onClose, selectedDate, user, categories, bills = [], onBillSaved }) {
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
   const [categoryId, setCategoryId] = useState('');
-  const [type, setType] = useState('despesa');
-  const [person, setPerson] = useState('Rafael');
+  const [barcode, setBarcode] = useState('');
+  const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    if (isOpen) {
-      if (billToEdit) {
-        setDescription(billToEdit.description);
-        setAmount(billToEdit.amount.toString());
-        setCategoryId(billToEdit.category_id || '');
-        setType(billToEdit.type || 'despesa');
-        setPerson(billToEdit.person || 'Rafael');
-      } else {
-        setDescription('');
-        setAmount('');
-        setCategoryId('');
-        setType('despesa');
-        setPerson('Rafael');
-      }
-    }
-  }, [isOpen, billToEdit]);
+  const [copiedId, setCopiedId] = useState(null);
 
   if (!isOpen) return null;
 
   const dateString = format(selectedDate, 'yyyy-MM-dd');
   const dayBills = bills.filter(b => b.date === dateString);
-  const totalReceitas = dayBills.filter(b => b.type === 'receita').reduce((acc, b) => acc + Number(b.amount), 0);
-  const totalDespesas = dayBills.filter(b => b.type === 'despesa' || !b.type).reduce((acc, b) => acc + Number(b.amount), 0);
-  const totalAmount = currentContext === 'pessoal' ? totalReceitas - totalDespesas : totalDespesas;
+  const totalAmount = dayBills.reduce((acc, bill) => acc + Number(bill.amount), 0);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!description || !amount || (type !== 'receita' && !categoryId)) return;
+    if (!description || !amount || !categoryId) return;
     setLoading(true);
 
     try {
-      if (billToEdit) {
-        const { error } = await supabase.from('bills').update({
+      let uploadedFileUrl = null;
+      let originalFileName = null;
+
+      if (file) {
+        originalFileName = file.name;
+        const fileExt = file.name.split('.').pop();
+        const filePath = `${user.id}/${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('boletos')
+          .upload(filePath, file, { cacheControl: '3600', upsert: false });
+
+        if (uploadError) throw uploadError;
+
+        const { data: publicUrlData } = supabase.storage
+          .from('boletos')
+          .getPublicUrl(filePath);
+
+        uploadedFileUrl = publicUrlData?.publicUrl || null;
+      }
+
+      const { error } = await supabase.from('bills').insert([
+        {
+          user_id: user.id,
+          date: dateString,
           description,
           amount: parseFloat(amount),
-          category_id: type === 'receita' ? null : categoryId,
-          type: type,
-          person: currentContext === 'pessoal' && type === 'receita' ? person : null
-        }).eq('id', billToEdit.id);
+          category_id: categoryId,
+          status: 'Pendente',
+          barcode: barcode.trim() || null,
+          file_url: uploadedFileUrl,
+          file_name: originalFileName
+        }
+      ]);
 
-        if (error) throw error;
-        onClose(); // Fechar o modal após editar
-      } else {
-        const { error } = await supabase.from('bills').insert([
-          {
-            user_id: user.id,
-            date: dateString,
-            description,
-            amount: parseFloat(amount),
-            category_id: type === 'receita' ? null : categoryId,
-            status: 'Pendente',
-            context: currentContext,
-            type: type,
-            person: currentContext === 'pessoal' && type === 'receita' ? person : null
-          }
-        ]);
-
-        if (error) throw error;
-        setDescription('');
-        setAmount('');
-        setCategoryId('');
-        setType('despesa');
-        setPerson('Rafael');
-      }
+      if (error) throw error;
       
-      onBillSaved(); // Fetch again
+      setDescription('');
+      setAmount('');
+      setCategoryId('');
+      setBarcode('');
+      setFile(null);
+      onBillSaved();
     } catch (error) {
       alert('Erro ao salvar conta: ' + error.message);
     } finally {
@@ -95,6 +85,13 @@ export default function BillModal({ isOpen, onClose, selectedDate, user, categor
     }
   };
 
+  const copyBarcode = (code, id) => {
+    if (!code) return;
+    navigator.clipboard.writeText(code.replace(/[^0-9]/g, ''));
+    setCopiedId(id);
+    setTimeout(() => setCopiedId(null), 2000);
+  };
+
   const formattedDateHeader = format(selectedDate, "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
 
   return (
@@ -105,42 +102,42 @@ export default function BillModal({ isOpen, onClose, selectedDate, user, categor
       padding: '1rem'
     }}>
       <div style={{ 
-        width: '100%', maxWidth: '480px', 
-        background: 'var(--calendar-bg)',
-        border: '1px solid var(--border-focus)',
+        width: '100%', maxWidth: '520px', 
+        background: '#111116',
+        border: '1px solid rgba(129, 140, 248, 0.2)',
         borderRadius: '24px',
         padding: '2rem',
         position: 'relative',
-        boxShadow: 'var(--shadow-lg)',
+        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 0 40px rgba(99, 102, 241, 0.1)',
         display: 'flex',
         flexDirection: 'column',
-        maxHeight: '90vh'
+        maxHeight: '92vh'
       }}>
         <button 
           onClick={onClose} 
           style={{ 
             position: 'absolute', top: '16px', right: '16px', 
-            background: 'var(--input-bg)', border: 'none', 
+            background: 'rgba(255,255,255,0.05)', border: 'none', 
             color: 'var(--text-secondary)', cursor: 'pointer',
             width: '32px', height: '32px', borderRadius: '8px',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             transition: 'all 0.2s'
           }}
-          onMouseOver={(e) => e.currentTarget.style.background = 'var(--input-border)'}
-          onMouseOut={(e) => e.currentTarget.style.background = 'var(--input-bg)'}
+          onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+          onMouseOut={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
         >
           <X size={16} />
         </button>
         
-        <div style={{ marginBottom: '1.5rem' }}>
+        <div style={{ marginBottom: '1.25rem' }}>
           <span style={{ fontSize: '0.75rem', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--accent-primary)', textTransform: 'uppercase' }}>
-            {billToEdit ? 'Editar Lançamento' : 'Contas do Dia'}
+            Contas do Dia
           </span>
           <h2 style={{ 
             fontSize: '1.75rem', 
             fontWeight: 900, 
             letterSpacing: '-0.02em', 
-            color: 'var(--text-primary)',
+            color: '#ffffff',
             margin: '0.25rem 0 0 0',
             textTransform: 'lowercase'
           }}>
@@ -148,37 +145,28 @@ export default function BillModal({ isOpen, onClose, selectedDate, user, categor
           </h2>
         </div>
 
-        {!billToEdit && (
-          <div style={{ flex: 1, overflowY: 'auto', marginBottom: '1.5rem', display: 'flex', flexDirection: 'column', gap: '12px', paddingRight: '4px' }}>
-            {dayBills.length === 0 ? (
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', textAlign: 'center', padding: '2rem 0' }}>Nenhuma conta lançada neste dia.</p>
-            ) : (
-              dayBills.map(bill => (
-                <div key={bill.id} style={{ 
-                  background: 'var(--item-bg)',
-                  border: '1px solid var(--item-border)',
-                  borderRadius: '12px',
-                  padding: '1rem',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center'
-                }}>
+        {/* Lista de Contas do Dia */}
+        <div style={{ flex: 1, overflowY: 'auto', marginBottom: '1.25rem', display: 'flex', flexDirection: 'column', gap: '10px', paddingRight: '4px' }}>
+          {dayBills.length === 0 ? (
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', textAlign: 'center', padding: '1.5rem 0' }}>
+              Nenhuma conta lançada neste dia.
+            </p>
+          ) : (
+            dayBills.map(bill => (
+              <div key={bill.id} style={{ 
+                background: 'rgba(255,255,255,0.03)',
+                border: '1px solid rgba(255,255,255,0.08)',
+                borderRadius: '14px',
+                padding: '0.9rem 1rem',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '8px'
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <div>
-                    <div style={{ fontWeight: 600, color: 'var(--text-primary)', fontSize: '0.95rem' }}>
-                      {bill.description}
-                      {bill.type === 'receita' && bill.person && (
-                        <span style={{ marginLeft: '8px', fontSize: '0.75rem', background: 'rgba(16, 185, 129, 0.2)', color: '#86efac', padding: '2px 6px', borderRadius: '4px' }}>
-                          {bill.person}
-                        </span>
-                      )}
-                      {bill.type !== 'receita' && bill.category_id && (
-                        <span style={{ marginLeft: '8px', fontSize: '0.75rem', background: 'var(--input-bg)', color: 'var(--text-secondary)', padding: '2px 6px', borderRadius: '4px' }}>
-                          {categories.find(c => c.id === bill.category_id)?.name}
-                        </span>
-                      )}
-                    </div>
-                    <div style={{ color: bill.type === 'receita' ? '#86efac' : '#fb7185', fontWeight: 600, marginTop: '4px', fontSize: '1.1rem' }}>
-                      {bill.type === 'receita' ? '+ ' : '- '}R$ {Number(bill.amount).toFixed(2).replace('.', ',')}
+                    <div style={{ fontWeight: 600, color: '#f8fafc', fontSize: '0.95rem' }}>{bill.description}</div>
+                    <div style={{ color: '#fb7185', fontWeight: 700, marginTop: '2px', fontSize: '1.15rem' }}>
+                      R$ {bill.amount.toFixed(2).replace('.', ',')}
                     </div>
                   </div>
                   <button 
@@ -187,139 +175,170 @@ export default function BillModal({ isOpen, onClose, selectedDate, user, categor
                       background: 'rgba(244, 63, 94, 0.1)', 
                       color: '#fb7185', 
                       border: '1px solid rgba(244, 63, 94, 0.3)',
-                      padding: '6px 12px',
+                      padding: '4px 10px',
                       borderRadius: '8px',
-                      fontSize: '0.85rem',
+                      fontSize: '0.78rem',
                       fontWeight: 600,
-                      cursor: 'pointer',
-                      transition: 'all 0.2s'
+                      cursor: 'pointer'
                     }}
-                    onMouseOver={(e) => e.currentTarget.style.background = 'rgba(244, 63, 94, 0.2)'}
-                    onMouseOut={(e) => e.currentTarget.style.background = 'rgba(244, 63, 94, 0.1)'}
                   >
                     Remover
                   </button>
                 </div>
-              ))
-            )}
 
-            {dayBills.length > 0 && (
-              <div style={{ 
-                background: currentContext === 'pessoal' ? (totalAmount >= 0 ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)') : 'rgba(99, 102, 241, 0.1)',
-                border: `1px solid ${currentContext === 'pessoal' ? (totalAmount >= 0 ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)') : 'rgba(99, 102, 241, 0.3)'}`,
-                borderRadius: '12px',
-                padding: '1rem',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginTop: '0.5rem'
-              }}>
-                <span style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>
-                  {currentContext === 'pessoal' ? 'Saldo do dia' : 'Total do dia'}
-                </span>
-                <span style={{ 
-                  color: currentContext === 'pessoal' ? (totalAmount >= 0 ? '#86efac' : '#fca5a5') : 'var(--accent-primary)', 
-                  fontWeight: 800, fontSize: '1.4rem', letterSpacing: '-0.02em' 
-                }}>
-                  R$ {totalAmount.toFixed(2).replace('.', ',')}
-                </span>
+                {/* Ações Rápidas: Copiar Linha Digitável e Ver Boleto */}
+                {(bill.barcode || bill.file_url) && (
+                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', paddingTop: '4px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                    {bill.barcode && (
+                      <button
+                        type="button"
+                        onClick={() => copyBarcode(bill.barcode, bill.id)}
+                        style={{
+                          background: 'rgba(99, 102, 241, 0.15)',
+                          border: '1px solid rgba(99, 102, 241, 0.3)',
+                          color: '#a5b4fc',
+                          borderRadius: '8px',
+                          padding: '4px 10px',
+                          fontSize: '0.75rem',
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '5px'
+                        }}
+                      >
+                        {copiedId === bill.id ? <Check size={13} color="#34d399" /> : <Copy size={13} />}
+                        {copiedId === bill.id ? 'Código Copiado!' : 'Copiar Código de Barras'}
+                      </button>
+                    )}
+
+                    {bill.file_url && (
+                      <a
+                        href={bill.file_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          background: 'rgba(52, 211, 153, 0.12)',
+                          border: '1px solid rgba(52, 211, 153, 0.3)',
+                          color: '#6ee7b7',
+                          borderRadius: '8px',
+                          padding: '4px 10px',
+                          fontSize: '0.75rem',
+                          fontWeight: 600,
+                          textDecoration: 'none',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '5px'
+                        }}
+                      >
+                        <ExternalLink size={13} />
+                        Ver Boleto Anexo
+                      </a>
+                    )}
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-        )}
-
-        <div style={{ borderTop: billToEdit ? 'none' : '1px solid var(--item-border)', paddingTop: billToEdit ? '0' : '1.5rem' }}>
-          {!billToEdit && (
-            <span style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--accent-primary)', textTransform: 'uppercase', marginBottom: '1rem' }}>
-              Adicionar Conta
-            </span>
+            ))
           )}
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            
-              <div style={{ display: 'flex', gap: '8px', marginBottom: '4px' }}>
-                <button
-                  type="button"
-                  onClick={() => setType('receita')}
-                  style={{
-                    flex: 1, padding: '8px', borderRadius: '8px', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', transition: 'all 0.2s',
-                    background: type === 'receita' ? 'rgba(16, 185, 129, 0.2)' : 'transparent',
-                    color: type === 'receita' ? '#10b981' : 'var(--text-secondary)',
-                    border: `1px solid ${type === 'receita' ? 'rgba(16, 185, 129, 0.4)' : 'var(--input-border)'}`
-                  }}
-                >
-                  Entrada (Receita)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setType('despesa')}
-                  style={{
-                    flex: 1, padding: '8px', borderRadius: '8px', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', transition: 'all 0.2s',
-                    background: type === 'despesa' ? 'rgba(239, 68, 68, 0.2)' : 'transparent',
-                    color: type === 'despesa' ? '#ef4444' : 'var(--text-secondary)',
-                    border: `1px solid ${type === 'despesa' ? 'rgba(239, 68, 68, 0.4)' : 'var(--input-border)'}`
-                  }}
-                >
-                  Saída (Despesa)
-                </button>
-              </div>
 
+          {dayBills.length > 0 && (
+            <div style={{ 
+              background: 'rgba(99, 102, 241, 0.1)',
+              border: '1px solid rgba(99, 102, 241, 0.3)',
+              borderRadius: '12px',
+              padding: '0.8rem 1rem',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center'
+            }}>
+              <span style={{ color: 'var(--text-secondary)', fontWeight: 500, fontSize: '0.9rem' }}>Total do dia</span>
+              <span style={{ color: 'var(--accent-primary)', fontWeight: 800, fontSize: '1.35rem', letterSpacing: '-0.02em' }}>
+                R$ {totalAmount.toFixed(2).replace('.', ',')}
+              </span>
+            </div>
+          )}
+        </div>
+
+        {/* Adicionar Conta Manual */}
+        <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '1.25rem' }}>
+          <span style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--accent-primary)', textTransform: 'uppercase', marginBottom: '0.75rem' }}>
+            Adicionar Conta Neste Dia
+          </span>
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            
             <input 
               type="text" required
               placeholder="Nome (ex: Aluguel, Energia...)"
               value={description} onChange={e => setDescription(e.target.value)}
               style={{
-                background: 'var(--input-bg)', border: '1px solid var(--input-border)',
-                padding: '0.8rem 1rem', borderRadius: '12px', color: 'var(--text-primary)', fontSize: '0.95rem',
-                outline: 'none', transition: 'all 0.2s', width: '100%'
+                background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
+                padding: '0.75rem 1rem', borderRadius: '12px', color: '#fff', fontSize: '0.9rem',
+                outline: 'none', width: '100%'
               }}
-              onFocus={(e) => e.currentTarget.style.borderColor = 'var(--accent-primary)'}
-              onBlur={(e) => e.currentTarget.style.borderColor = 'var(--input-border)'}
             />
 
-            <div style={{ display: 'flex', gap: '12px' }}>
-              {type === 'receita' ? (
-                currentContext === 'pessoal' ? (
-                  <select 
-                    value={person} onChange={e => setPerson(e.target.value)} required
-                    style={{
-                      background: 'var(--input-bg)', border: '1px solid var(--input-border)',
-                      padding: '0.8rem 1rem', borderRadius: '12px', color: 'var(--text-primary)', fontSize: '0.95rem',
-                      outline: 'none', flex: 1, cursor: 'pointer', appearance: 'none'
-                    }}
-                  >
-                    <option value="Rafael" style={{ background: 'var(--calendar-bg)' }}>Rafael</option>
-                    <option value="Tásia" style={{ background: 'var(--calendar-bg)' }}>Tásia</option>
-                  </select>
-                ) : null // Empresarial Receita doesn't show category or person dropdown
-              ) : (
-                <select 
-                  value={categoryId} onChange={e => setCategoryId(e.target.value)} required
-                  style={{
-                    background: 'var(--input-bg)', border: '1px solid var(--input-border)',
-                    padding: '0.8rem 1rem', borderRadius: '12px', color: 'var(--text-primary)', fontSize: '0.95rem',
-                    outline: 'none', flex: 1, cursor: 'pointer', appearance: 'none'
-                  }}
-                >
-                  <option value="" style={{ background: 'var(--calendar-bg)' }}>Categoria</option>
-                  {categories.map(c => (
-                    <option key={c.id} value={c.id} style={{ background: 'var(--calendar-bg)' }}>{c.name}</option>
-                  ))}
-                </select>
-              )}
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <select 
+                value={categoryId} onChange={e => setCategoryId(e.target.value)} required
+                style={{
+                  background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
+                  padding: '0.75rem 1rem', borderRadius: '12px', color: '#fff', fontSize: '0.9rem',
+                  outline: 'none', flex: 1, cursor: 'pointer'
+                }}
+              >
+                <option value="" style={{ background: '#111116' }}>Categoria</option>
+                {categories.map(c => (
+                  <option key={c.id} value={c.id} style={{ background: '#111116' }}>{c.name}</option>
+                ))}
+              </select>
 
               <input 
                 type="number" step="0.01" required
                 placeholder="Valor (R$)"
                 value={amount} onChange={e => setAmount(e.target.value)}
                 style={{
-                  background: 'var(--input-bg)', border: '1px solid var(--input-border)',
-                  padding: '0.8rem 1rem', borderRadius: '12px', color: 'var(--text-primary)', fontSize: '0.95rem',
-                  outline: 'none', width: (type === 'receita' && currentContext === 'empresarial') ? '100%' : '120px',
-                  flex: (type === 'receita' && currentContext === 'empresarial') ? 1 : 'none'
+                  background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
+                  padding: '0.75rem 1rem', borderRadius: '12px', color: '#fff', fontSize: '0.9rem',
+                  outline: 'none', width: '120px'
                 }}
-                onFocus={(e) => e.currentTarget.style.borderColor = 'var(--accent-primary)'}
-                onBlur={(e) => e.currentTarget.style.borderColor = 'var(--input-border)'}
               />
+            </div>
+
+            {/* Opcional: Linha digitável e anexo de boleto */}
+            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+              <input 
+                type="text"
+                placeholder="Código de barras (opcional)"
+                value={barcode} onChange={e => setBarcode(e.target.value)}
+                style={{
+                  background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)',
+                  padding: '0.6rem 0.8rem', borderRadius: '10px', color: '#fff', fontSize: '0.8rem',
+                  outline: 'none', flex: 1, fontFamily: 'monospace'
+                }}
+              />
+
+              <label style={{
+                background: file ? 'rgba(99, 102, 241, 0.2)' : 'rgba(255,255,255,0.05)',
+                border: '1px solid rgba(255,255,255,0.1)',
+                color: file ? 'var(--accent-primary)' : 'var(--text-secondary)',
+                padding: '0.6rem 0.8rem',
+                borderRadius: '10px',
+                fontSize: '0.8rem',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                whiteSpace: 'nowrap'
+              }}>
+                <Paperclip size={14} />
+                {file ? 'Anexado' : 'Anexar PDF'}
+                <input 
+                  type="file" 
+                  accept=".pdf,image/*" 
+                  style={{ display: 'none' }} 
+                  onChange={(e) => setFile(e.target.files[0] || null)}
+                />
+              </label>
             </div>
 
             <button 
@@ -330,18 +349,16 @@ export default function BillModal({ isOpen, onClose, selectedDate, user, categor
                 color: '#fff',
                 border: 'none',
                 borderRadius: '12px',
-                padding: '1rem',
-                fontSize: '1rem',
+                padding: '0.85rem',
+                fontSize: '0.95rem',
                 fontWeight: 700,
                 cursor: loading ? 'not-allowed' : 'pointer',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-                marginTop: '4px', transition: 'all 0.2s',
+                marginTop: '4px',
                 opacity: loading ? 0.7 : 1
               }}
-              onMouseOver={(e) => { if(!loading) e.currentTarget.style.background = 'var(--accent-hover)' }}
-              onMouseOut={(e) => { if(!loading) e.currentTarget.style.background = 'var(--accent-primary)' }}
             >
-              <Check size={18} strokeWidth={3} /> Salvar
+              <Check size={18} strokeWidth={3} /> {loading ? 'Salvando...' : 'Salvar'}
             </button>
           </form>
         </div>
