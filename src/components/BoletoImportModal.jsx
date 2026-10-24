@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { X, UploadCloud, FileText, CheckCircle2, AlertCircle, Copy, Check } from 'lucide-react';
+import { X, UploadCloud, FileText, CheckCircle2, AlertCircle, Copy, Check, Loader2 } from 'lucide-react';
 import { parseBoleto } from '../utils/boletoParser';
+import { extractBoletoFromPdf } from '../utils/pdfReader';
 
 export default function BoletoImportModal({ isOpen, onClose, user, categories, onImportSuccess }) {
   const [barcodeInput, setBarcodeInput] = useState('');
@@ -11,6 +12,7 @@ export default function BoletoImportModal({ isOpen, onClose, user, categories, o
   const [categoryId, setCategoryId] = useState('');
   const [file, setFile] = useState(null);
   const [fileUploading, setFileUploading] = useState(false);
+  const [isReadingPdf, setIsReadingPdf] = useState(false);
   const [parsedInfo, setParsedInfo] = useState(null);
   const [parseError, setParseError] = useState('');
   const [copied, setCopied] = useState(false);
@@ -37,14 +39,36 @@ export default function BoletoImportModal({ isOpen, onClose, user, categories, o
     }
   };
 
-  const handleFileChange = (e) => {
+  const handleFileChange = async (e) => {
     const selectedFile = e.target.files[0];
-    if (selectedFile) {
-      setFile(selectedFile);
-      if (!description) {
-        // Sugere o nome do arquivo limpo como descrição inicial
-        const cleanName = selectedFile.name.replace(/\.[^/.]+$/, '').replace(/[_-]/g, ' ');
-        setDescription(cleanName);
+    if (!selectedFile) return;
+
+    setFile(selectedFile);
+    setParseError('');
+
+    // Sugere descrição pelo nome do arquivo
+    const cleanName = selectedFile.name.replace(/\.[^/.]+$/, '').replace(/[_-]/g, ' ');
+    if (!description) {
+      setDescription(cleanName);
+    }
+
+    // Se for PDF, lê o conteúdo e extrai a linha digitável automaticamente
+    if (selectedFile.type === 'application/pdf' || selectedFile.name.toLowerCase().endsWith('.pdf')) {
+      setIsReadingPdf(true);
+      try {
+        const result = await extractBoletoFromPdf(selectedFile);
+        if (result.success && result.parsed) {
+          setBarcodeInput(result.parsed.formattedCode || result.rawBarcode);
+          setParsedInfo(result.parsed);
+          if (result.parsed.amount) setAmount(result.parsed.amount.toFixed(2));
+          if (result.parsed.dueDate) setDueDate(result.parsed.dueDate);
+        } else {
+          setParseError('PDF anexado! Linha digitável não identificada automaticamente no texto (você pode digitá-la ou colar abaixo).');
+        }
+      } catch (err) {
+        console.error('Erro na leitura do PDF:', err);
+      } finally {
+        setIsReadingPdf(false);
       }
     }
   };
@@ -168,14 +192,14 @@ export default function BoletoImportModal({ isOpen, onClose, user, categories, o
             Importação Rápida
           </h2>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', margin: 0 }}>
-            Cole a linha digitável para decodificar valor e vencimento instantaneamente ou anexe o arquivo do boleto (PDF/Imagem).
+            Anexe o arquivo PDF do boleto para extrair automaticamente a linha digitável, valor e vencimento!
           </p>
         </div>
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
           {/* Upload do Arquivo / PDF */}
           <div style={{
-            border: '2px dashed rgba(129, 140, 248, 0.3)',
+            border: isReadingPdf ? '2px dashed var(--accent-primary)' : '2px dashed rgba(129, 140, 248, 0.3)',
             borderRadius: '16px',
             padding: '1.25rem',
             textAlign: 'center',
@@ -190,8 +214,20 @@ export default function BoletoImportModal({ isOpen, onClose, user, categories, o
               style={{ display: 'none' }}
             />
             <label htmlFor="boleto-file" style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
-              <UploadCloud size={32} color={file ? 'var(--accent-primary)' : 'var(--text-muted)'} />
-              {file ? (
+              {isReadingPdf ? (
+                <Loader2 size={32} color="var(--accent-primary)" style={{ animation: 'spin 1s linear infinite' }} />
+              ) : (
+                <UploadCloud size={32} color={file ? 'var(--accent-primary)' : 'var(--text-muted)'} />
+              )}
+
+              {isReadingPdf ? (
+                <div>
+                  <span style={{ color: 'var(--accent-primary)', fontWeight: 600 }}>Lendo dados do PDF do boleto...</span>
+                  <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem', marginTop: '2px' }}>
+                    Extraindo código de barras, vencimento e valor...
+                  </div>
+                </div>
+              ) : file ? (
                 <div>
                   <div style={{ color: '#fff', fontWeight: 600, fontSize: '0.95rem' }}>{file.name}</div>
                   <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem', marginTop: '2px' }}>
@@ -202,7 +238,7 @@ export default function BoletoImportModal({ isOpen, onClose, user, categories, o
                 <div>
                   <span style={{ color: 'var(--accent-primary)', fontWeight: 600 }}>Clique para anexar o PDF do boleto</span>
                   <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem', marginTop: '4px' }}>
-                    PDF, JPG ou PNG (guardamos o boleto atrelado à conta)
+                    O sistema lê o PDF e preenche tudo sozinho!
                   </div>
                 </div>
               )}
@@ -217,7 +253,7 @@ export default function BoletoImportModal({ isOpen, onClose, user, categories, o
               </label>
               {parsedInfo && (
                 <span style={{ fontSize: '0.75rem', color: '#34d399', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <CheckCircle2 size={13} /> {parsedInfo.type === 'BANCARIO' ? 'Boleto Bancário Válido' : 'Concessionária Válida'}
+                  <CheckCircle2 size={13} /> {parsedInfo.type === 'BANCARIO' ? 'Boleto Bancário Lido' : 'Concessionária Lida'}
                 </span>
               )}
             </div>
@@ -290,7 +326,7 @@ export default function BoletoImportModal({ isOpen, onClose, user, categories, o
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
             <div>
               <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: '6px' }}>
-                Vencimento * {parsedInfo?.dueDate && <span style={{ color: '#34d399' }}>(detectado)</span>}
+                Vencimento * {parsedInfo?.dueDate && <span style={{ color: '#34d399' }}>(extraído)</span>}
               </label>
               <input
                 type="date"
@@ -312,7 +348,7 @@ export default function BoletoImportModal({ isOpen, onClose, user, categories, o
 
             <div>
               <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: '6px' }}>
-                Valor (R$) * {parsedInfo?.amount && <span style={{ color: '#34d399' }}>(detectado)</span>}
+                Valor (R$) * {parsedInfo?.amount && <span style={{ color: '#34d399' }}>(extraído)</span>}
               </label>
               <input
                 type="number"
@@ -366,7 +402,7 @@ export default function BoletoImportModal({ isOpen, onClose, user, categories, o
           {/* Botão Salvar */}
           <button
             type="submit"
-            disabled={fileUploading}
+            disabled={fileUploading || isReadingPdf}
             style={{
               background: 'var(--accent-primary)',
               color: '#fff',
@@ -375,13 +411,13 @@ export default function BoletoImportModal({ isOpen, onClose, user, categories, o
               padding: '1rem',
               fontSize: '1rem',
               fontWeight: 700,
-              cursor: fileUploading ? 'not-allowed' : 'pointer',
+              cursor: fileUploading || isReadingPdf ? 'not-allowed' : 'pointer',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               gap: '8px',
               marginTop: '0.5rem',
-              opacity: fileUploading ? 0.7 : 1,
+              opacity: fileUploading || isReadingPdf ? 0.7 : 1,
               transition: 'all 0.2s'
             }}
           >
