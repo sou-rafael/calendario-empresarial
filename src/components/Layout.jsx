@@ -113,7 +113,7 @@ export default function Layout() {
 
   return (
     <div className="app-layout">
-      <Sidebar currentContext={currentContext} setContext={setCurrentContext} onOpenImport={() => setIsBoletoModalOpen(true)} />
+      <Sidebar currentContext={currentContext} setContext={setCurrentContext} />
       <div className="main-area">
       
       <header style={{ 
@@ -162,16 +162,33 @@ export default function Layout() {
             onClick={() => setIsBoletoModalOpen(true)} 
             className="btn btn-primary" 
             style={{ 
-              display: 'flex', 
+              display: 'inline-flex', 
               alignItems: 'center', 
-              gap: '6px', 
-              background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
-              boxShadow: '0 4px 12px rgba(79, 70, 229, 0.3)',
+              gap: '8px', 
+              height: '38px',
+              padding: '0 14px',
+              borderRadius: 'var(--radius-md)',
+              fontSize: '0.875rem',
               fontWeight: 600,
-              cursor: 'pointer'
+              letterSpacing: '0.01em',
+              background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
+              boxShadow: '0 2px 8px rgba(99, 102, 241, 0.25)',
+              border: '1px solid rgba(255, 255, 255, 0.15)',
+              cursor: 'pointer',
+              transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+              whiteSpace: 'nowrap'
+            }}
+            onMouseOver={(e) => {
+              e.currentTarget.style.transform = 'translateY(-1px)';
+              e.currentTarget.style.boxShadow = '0 4px 14px rgba(99, 102, 241, 0.4)';
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '0 2px 8px rgba(99, 102, 241, 0.25)';
             }}
           >
-            ⚡ Importar Boleto
+            <UploadCloud size={16} strokeWidth={2.2} />
+            <span>Importar Boleto</span>
           </button>
 
           <button onClick={toggleTheme} className="btn btn-secondary" style={{ padding: '0.5rem 1rem' }} title="Alternar Tema">
