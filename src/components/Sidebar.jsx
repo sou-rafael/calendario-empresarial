@@ -23,38 +23,61 @@ export default function Sidebar({ currentContext, setContext }) {
       </button>
 
       <aside className={`sidebar glass-panel ${isOpen ? 'open' : ''}`}>
-        <div className="sidebar-header" style={{ marginBottom: '1rem' }}>
-          <div className="logo-icon">FZ</div>
-          <h2 className="sidebar-title">
-            {currentContext === 'empresarial' ? 'Empresarial' : 'Pessoal'}
-          </h2>
+        <div className="sidebar-header" style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div className="logo-icon" style={{
+            width: '40px', height: '40px', borderRadius: '12px',
+            background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontWeight: 800, fontSize: '1.05rem', color: '#fff',
+            boxShadow: '0 4px 14px rgba(99, 102, 241, 0.4)',
+            flexShrink: 0
+          }}>
+            FZ
+          </div>
+          <div className="brand-text">
+            <h2 className="sidebar-title" style={{ fontSize: '1.25rem', fontWeight: 800, margin: 0, letterSpacing: '-0.02em', lineHeight: 1.1 }}>
+              FiscalZap
+            </h2>
+            <span style={{ fontSize: '0.65rem', color: 'var(--accent-primary)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginTop: '2px' }}>
+              Gestão Financeira
+            </span>
+          </div>
         </div>
 
         {/* Context Switcher */}
-        <div style={{ display: 'flex', background: 'var(--bg-secondary)', borderRadius: 'var(--radius-md)', padding: '4px', marginBottom: '2rem' }}>
+        <div style={{
+          display: 'flex',
+          background: 'var(--bg-secondary)',
+          borderRadius: '12px',
+          padding: '4px',
+          marginBottom: '1.75rem',
+          border: '1px solid var(--border-color)'
+        }}>
           <button 
             onClick={() => setContext('empresarial')}
             style={{ 
-              flex: 1, padding: '8px', border: 'none', borderRadius: 'var(--radius-md)', cursor: 'pointer',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '0.85rem', fontWeight: 600,
+              flex: 1, padding: '8px 10px', border: 'none', borderRadius: '8px', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '0.82rem', fontWeight: 600,
               background: currentContext === 'empresarial' ? 'var(--accent-primary)' : 'transparent',
-              color: currentContext === 'empresarial' ? 'white' : 'var(--text-secondary)',
+              color: currentContext === 'empresarial' ? '#fff' : 'var(--text-secondary)',
+              boxShadow: currentContext === 'empresarial' ? '0 2px 8px rgba(99, 102, 241, 0.3)' : 'none',
               transition: 'all 0.2s'
             }}
           >
-            <Briefcase size={16} /> <span className="nav-label">Empresa</span>
+            <Briefcase size={15} /> <span className="nav-label">Empresa</span>
           </button>
           <button 
             onClick={() => setContext('pessoal')}
             style={{ 
-              flex: 1, padding: '8px', border: 'none', borderRadius: 'var(--radius-md)', cursor: 'pointer',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '0.85rem', fontWeight: 600,
+              flex: 1, padding: '8px 10px', border: 'none', borderRadius: '8px', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '0.82rem', fontWeight: 600,
               background: currentContext === 'pessoal' ? 'var(--accent-primary)' : 'transparent',
-              color: currentContext === 'pessoal' ? 'white' : 'var(--text-secondary)',
+              color: currentContext === 'pessoal' ? '#fff' : 'var(--text-secondary)',
+              boxShadow: currentContext === 'pessoal' ? '0 2px 8px rgba(99, 102, 241, 0.3)' : 'none',
               transition: 'all 0.2s'
             }}
           >
-            <User size={16} /> <span className="nav-label">Pessoal</span>
+            <User size={15} /> <span className="nav-label">Pessoal</span>
           </button>
         </div>
         

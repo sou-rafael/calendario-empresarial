@@ -544,7 +544,7 @@ body.light-mode .status-atrasado {
     min-height: 100vh;
   }
   
-  .sidebar-header h2, .sidebar-nav .nav-label {
+  .sidebar-header .brand-text, .sidebar-header h2, .sidebar-nav .nav-label {
     display: none;
   }
   
@@ -618,7 +618,7 @@ body.light-mode .status-atrasado {
     left: 0;
   }
 
-  .sidebar-header h2, .sidebar-nav .nav-label {
+  .sidebar-header .brand-text, .sidebar-header h2, .sidebar-nav .nav-label {
     display: block;
   }
 

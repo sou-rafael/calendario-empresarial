@@ -58,20 +58,25 @@ export default function CalendarView() {
           style={{
             minHeight: '120px', padding: '10px',
             backgroundColor: isCurrentMonth ? 'var(--cell-bg)' : 'transparent',
-            borderRadius: 'var(--radius-md)',
-            border: isSelected ? '2px solid var(--accent-primary)' : '2px solid transparent',
+            borderRadius: '14px',
+            border: isSelected ? '2px solid var(--accent-primary)' : '1px solid var(--border-color)',
             cursor: 'pointer', transition: 'all var(--transition-fast)',
             display: 'flex', flexDirection: 'column',
-            opacity: isCurrentMonth ? 1 : 0.4,
+            opacity: isCurrentMonth ? 1 : 0.35,
+            boxShadow: isSelected ? '0 0 12px rgba(99, 102, 241, 0.25)' : 'none'
           }}
           className={isCurrentMonth ? 'calendar-cell-active' : 'calendar-cell-inactive'}
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ 
-              display: 'inline-block', width: '28px', height: '28px', lineHeight: '28px', textAlign: 'center',
-              borderRadius: '50%', backgroundColor: isToday ? 'var(--accent-primary)' : 'transparent',
-              color: isToday ? 'white' : (isSelected ? 'var(--accent-primary)' : 'inherit'),
-              fontWeight: isToday || isSelected ? 'bold' : 'normal',
+              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+              width: '28px', height: '28px',
+              borderRadius: '8px',
+              background: isToday ? 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)' : 'transparent',
+              color: isToday ? '#fff' : (isSelected ? 'var(--accent-primary)' : 'inherit'),
+              fontWeight: isToday || isSelected ? 800 : 500,
+              fontSize: '0.85rem',
+              boxShadow: isToday ? '0 2px 8px rgba(99, 102, 241, 0.35)' : 'none'
             }}>
               {formattedDate}
             </span>
@@ -80,22 +85,22 @@ export default function CalendarView() {
           <div style={{ flex: 1, marginTop: '8px', fontSize: '0.85rem', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', gap: '4px' }}>
             {receitas > 0 && (
               <div style={{
-                background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', padding: '2px 6px',
-                borderRadius: '4px', fontWeight: 600, textAlign: 'right', border: '1px solid rgba(16, 185, 129, 0.2)', fontSize: '0.8rem'
+                background: 'rgba(16, 185, 129, 0.12)', color: '#10b981', padding: '3px 6px',
+                borderRadius: '6px', fontWeight: 700, textAlign: 'right', border: '1px solid rgba(16, 185, 129, 0.25)', fontSize: '0.78rem'
               }}>
                 + R$ {receitas.toFixed(2).replace('.', ',')}
               </div>
             )}
             {despesas > 0 && (
               <div style={{
-                background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', padding: '2px 6px',
-                borderRadius: '4px', fontWeight: 600, textAlign: 'right', border: '1px solid rgba(239, 68, 68, 0.2)', fontSize: '0.8rem'
+                background: 'rgba(239, 68, 68, 0.12)', color: '#ef4444', padding: '3px 6px',
+                borderRadius: '6px', fontWeight: 700, textAlign: 'right', border: '1px solid rgba(239, 68, 68, 0.25)', fontSize: '0.78rem'
               }}>
                 - R$ {despesas.toFixed(2).replace('.', ',')}
               </div>
             )}
             {dayBills.length > 0 && (
-              <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textAlign: 'right', marginTop: '2px' }}>
+              <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', textAlign: 'right', marginTop: '2px', fontWeight: 600 }}>
                 {dayBills.length} {dayBills.length === 1 ? 'lançamento' : 'lançamentos'}
               </div>
             )}
