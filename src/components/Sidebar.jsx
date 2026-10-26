@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { LayoutDashboard, Calendar as CalendarIcon, List, FileText, Settings, Menu, X, Briefcase, User } from 'lucide-react';
+import { LayoutDashboard, Calendar as CalendarIcon, List, FileText, Settings, Menu, X, Briefcase, User, Smartphone } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 
 export default function Sidebar({ currentContext, setContext }) {
@@ -10,6 +10,7 @@ export default function Sidebar({ currentContext, setContext }) {
     { icon: <List size={20} />, label: 'Lista', path: '/list' },
     { icon: <FileText size={20} />, label: 'DRE', path: '/dre' },
     { icon: <LayoutDashboard size={20} />, label: 'Dashboard', path: '/dashboard' },
+    { icon: <Smartphone size={20} />, label: 'Versão Mobile', path: '/mobile' },
   ];
 
   return (
@@ -23,7 +24,7 @@ export default function Sidebar({ currentContext, setContext }) {
 
       <aside className={`sidebar glass-panel ${isOpen ? 'open' : ''}`}>
         <div className="sidebar-header" style={{ marginBottom: '1rem' }}>
-          <div className="logo-icon">FC</div>
+          <div className="logo-icon">FZ</div>
           <h2 className="sidebar-title">
             {currentContext === 'empresarial' ? 'Empresarial' : 'Pessoal'}
           </h2>
@@ -70,7 +71,6 @@ export default function Sidebar({ currentContext, setContext }) {
               <span className="nav-label">{item.label}</span>
             </NavLink>
           ))}
-          
         </nav>
       </aside>
       

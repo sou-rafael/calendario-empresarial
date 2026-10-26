@@ -1,0 +1,19 @@
+{
+  "name": "FiscalZap • Calendário Financeiro",
+  "short_name": "FiscalZap",
+  "description": "Gestão financeira visual e ingestão rápida de contas e boletos para empresas.",
+  "start_url": "/mobile",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#09090b",
+  "theme_color": "#6366f1",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

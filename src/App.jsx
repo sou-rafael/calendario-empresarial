@@ -8,6 +8,7 @@ import CalendarView from './pages/CalendarView';
 import ListView from './pages/ListView';
 import DreView from './pages/DreView';
 import DashboardView from './pages/DashboardView';
+import MobilePocket from './pages/MobilePocket';
 
 function App() {
   return (
@@ -15,6 +16,18 @@ function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<Login />} />
+          
+          {/* Rota PWA Pocket Mobile */}
+          <Route 
+            path="/mobile" 
+            element={
+              <ProtectedRoute>
+                <MobilePocket />
+              </ProtectedRoute>
+            } 
+          />
+
+          {/* Rota Web Desktop Completa */}
           <Route 
             path="/" 
             element={
@@ -28,6 +41,7 @@ function App() {
             <Route path="dre" element={<DreView />} />
             <Route path="dashboard" element={<DashboardView />} />
           </Route>
+
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
