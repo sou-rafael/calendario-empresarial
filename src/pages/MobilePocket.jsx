@@ -3,7 +3,7 @@ import { useAuth } from '../components/AuthProvider';
 import { supabase } from '../lib/supabase';
 import { 
   Mic, UploadCloud, Copy, Check, ExternalLink, Calendar as CalendarIcon, 
-  MessageSquare, Briefcase, User, ChevronRight, AlertCircle, Sparkles, Monitor, Sun, Moon, Square
+  MessageSquare, Briefcase, User, ChevronRight, AlertCircle, Sparkles, Monitor, Sun, Moon, Square, Lightbulb
 } from 'lucide-react';
 import { format, isAfter, isToday, parseISO, addDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -30,6 +30,24 @@ export default function MobilePocket() {
   // Estados do fluxo de voz
   const [parsedVoiceData, setParsedVoiceData] = useState(null);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [exampleIndex, setExampleIndex] = useState(0);
+
+  // Exemplos do carrossel rotativo de inspiração
+  const examplePhrases = [
+    '💡 Exemplo: "Água 150 reais amanhã"',
+    '💡 Exemplo: "Aluguel 2500 reais dia 10"',
+    '💡 Exemplo: "DAS Simples Nacional 890 sexta-feira"',
+    '💡 Exemplo: "Energia Copel 380 reais dia 15"',
+    '💡 Exemplo: "Fornecedor Grãos 1200 amanhã"'
+  ];
+
+  useEffect(() => {
+    // Rotaciona o exemplo suavemente a cada 4 segundos
+    const timer = setInterval(() => {
+      setExampleIndex((prev) => (prev + 1) % examplePhrases.length);
+    }, 4000);
+    return () => clearInterval(timer);
+  }, []);
 
   // Hook nativo da Web Speech API (HTML5)
   const { 
@@ -257,7 +275,7 @@ export default function MobilePocket() {
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
-            padding: '1.5rem 0 1rem 0'
+            padding: '1rem 0 0.5rem 0'
           }}>
             <div style={{ position: 'relative' }}>
               {/* Efeito de onda pulsante se estiver gravando */}
@@ -296,32 +314,56 @@ export default function MobilePocket() {
               </button>
             </div>
 
-            <span style={{ fontSize: '1rem', fontWeight: 800, color: isListening ? '#ef4444' : 'var(--text-primary)', marginTop: '1rem', letterSpacing: '-0.01em' }}>
+            <span style={{ fontSize: '1.05rem', fontWeight: 800, color: isListening ? '#ef4444' : 'var(--text-primary)', marginTop: '0.85rem', letterSpacing: '-0.01em' }}>
               {isListening ? 'Ouvindo... Toque para finalizar' : 'Ditar Compromisso'}
             </span>
 
-            {/* Transcrição em tempo real ou feedback */}
-            <div style={{ minHeight: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: '4px' }}>
+            {/* Carrossel de Frases Inspiradoras (Orientação Suave de UX) */}
+            <div style={{
+              marginTop: '0.4rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              minHeight: '38px',
+              maxWidth: '340px',
+              textAlign: 'center'
+            }}>
               {transcript ? (
-                <span style={{ fontSize: '0.85rem', color: 'var(--accent-primary)', fontWeight: 600, textAlign: 'center', maxWidth: '320px', fontStyle: 'italic' }}>
+                <span style={{ fontSize: '0.88rem', color: 'var(--accent-primary)', fontWeight: 700, fontStyle: 'italic' }}>
                   "{transcript}"
                 </span>
-              ) : speechError ? (
-                <span style={{ fontSize: '0.75rem', color: '#ef4444', textAlign: 'center', maxWidth: '280px' }}>
-                  {speechError}
+              ) : isListening ? (
+                <span style={{ fontSize: '0.8rem', color: '#ef4444', fontWeight: 600 }}>
+                  Fale: Nome da conta + Valor + Data
                 </span>
               ) : (
-                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textAlign: 'center', maxWidth: '280px' }}>
-                  Fale algo como: "Pagar aluguel 1500 dia 10" ou "Copel 280 amanhã"
-                </span>
+                <div style={{
+                  background: 'var(--bg-secondary)',
+                  border: '1px solid var(--border-color)',
+                  borderRadius: '20px',
+                  padding: '5px 14px',
+                  fontSize: '0.78rem',
+                  color: 'var(--text-secondary)',
+                  fontWeight: 600,
+                  transition: 'all 0.4s ease-in-out',
+                  boxShadow: 'var(--shadow-sm)'
+                }}>
+                  {examplePhrases[exampleIndex]}
+                </div>
               )}
             </div>
+
+            {speechError && (
+              <span style={{ fontSize: '0.75rem', color: '#ef4444', textAlign: 'center', marginTop: '4px', maxWidth: '280px' }}>
+                {speechError}
+              </span>
+            )}
 
             {/* Botão Secundário: Anexar Boleto / PDF */}
             <button
               onClick={() => setIsBoletoModalOpen(true)}
               style={{
-                marginTop: '1rem',
+                marginTop: '1.25rem',
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '8px',
