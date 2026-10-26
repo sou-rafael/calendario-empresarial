@@ -3,7 +3,7 @@ import { useAuth } from '../components/AuthProvider';
 import { supabase } from '../lib/supabase';
 import { 
   Mic, UploadCloud, Copy, Check, ExternalLink, Calendar as CalendarIcon, 
-  MessageSquare, Briefcase, User, ChevronRight, AlertCircle, Sparkles, Monitor, Sun, Moon, Square, Lightbulb
+  MessageSquare, Briefcase, User, ChevronRight, AlertCircle, Sparkles, Monitor, Sun, Moon, Square, Lightbulb, Bell, BellOff, BellRing
 } from 'lucide-react';
 import { format, isAfter, isToday, parseISO, addDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -12,6 +12,7 @@ import BoletoImportModal from '../components/BoletoImportModal';
 import VoiceConfirmModal from '../components/VoiceConfirmModal';
 import MobileChatView from '../components/MobileChatView';
 import { useSpeechRecognition } from '../hooks/useSpeechRecognition';
+import { useWebPush } from '../hooks/useWebPush';
 import { parseVoiceExpense } from '../utils/voiceParser';
 
 export default function MobilePocket() {
@@ -244,6 +245,22 @@ export default function MobilePocket() {
             </button>
           </div>
 
+          {/* Botão de Notificações Web Push */}
+          <button
+            onClick={requestPushPermission}
+            title={pushPermission === 'granted' ? 'Notificações Ativas (Clique para testar alerta)' : 'Ativar Alertas de Vencimento'}
+            style={{
+              background: pushPermission === 'granted' ? 'rgba(52, 211, 153, 0.15)' : 'var(--bg-secondary)',
+              border: pushPermission === 'granted' ? '1px solid rgba(52, 211, 153, 0.3)' : '1px solid var(--border-color)',
+              color: pushPermission === 'granted' ? '#10b981' : 'var(--text-secondary)',
+              padding: '6px', borderRadius: '8px', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              transition: 'all 0.2s'
+            }}
+          >
+            {pushPermission === 'granted' ? <BellRing size={15} /> : <Bell size={15} />}
+          </button>
+
           {/* Botão de Tema Sol/Lua */}
           <button
             onClick={toggleTheme}
@@ -276,6 +293,56 @@ export default function MobilePocket() {
       {currentTab === 'home' && (
         <main style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
           
+          {/* Banner de Ativação de Notificações (Fase 4) */}
+          {pushPermission !== 'granted' && (
+            <div style={{
+              background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(99, 102, 241, 0.05) 100%)',
+              border: '1px solid rgba(129, 140, 248, 0.3)',
+              borderRadius: '16px',
+              padding: '0.85rem 1rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: '10px',
+              boxShadow: 'var(--shadow-sm)'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div style={{
+                  width: '32px', height: '32px', borderRadius: '8px',
+                  background: 'var(--accent-primary)', color: '#fff',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center'
+                }}>
+                  <Bell size={16} />
+                </div>
+                <div>
+                  <div style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+                    Lembrar boletos no dia?
+                  </div>
+                  <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
+                    Receba um alerta matinal nos dias de vencimento.
+                  </div>
+                </div>
+              </div>
+
+              <button
+                onClick={requestPushPermission}
+                style={{
+                  background: 'var(--accent-primary)',
+                  border: 'none',
+                  color: '#fff',
+                  borderRadius: '8px',
+                  padding: '6px 10px',
+                  fontSize: '0.72rem',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap'
+                }}
+              >
+                Ativar
+              </button>
+            </div>
+          )}
+
           {/* Card Resumo Rápido */}
           <div style={{
             background: isLightMode 
