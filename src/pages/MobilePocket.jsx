@@ -212,15 +212,17 @@ export default function MobilePocket() {
         zIndex: 50
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <div style={{
-            width: '32px', height: '32px', borderRadius: '10px',
-            background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontWeight: 800, fontSize: '0.9rem', color: '#fff',
-            boxShadow: '0 2px 10px rgba(99, 102, 241, 0.4)'
-          }}>
-            FZ
-          </div>
+          <img 
+            src="/favicon.svg" 
+            alt="FiscalZap" 
+            style={{
+              width: '32px',
+              height: '32px',
+              borderRadius: '8px',
+              boxShadow: '0 2px 8px rgba(99, 102, 241, 0.35)',
+              flexShrink: 0
+            }} 
+          />
           <div>
             <h1 style={{ fontSize: '0.95rem', fontWeight: 800, margin: 0, letterSpacing: '-0.02em', color: 'var(--text-primary)' }}>FiscalZap</h1>
             <span style={{ fontSize: '0.62rem', color: 'var(--accent-primary)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>

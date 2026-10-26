@@ -24,16 +24,17 @@ export default function Sidebar({ currentContext, setContext }) {
 
       <aside className={`sidebar glass-panel ${isOpen ? 'open' : ''}`}>
         <div className="sidebar-header" style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div className="logo-icon" style={{
-            width: '40px', height: '40px', borderRadius: '12px',
-            background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontWeight: 800, fontSize: '1.05rem', color: '#fff',
-            boxShadow: '0 4px 14px rgba(99, 102, 241, 0.4)',
-            flexShrink: 0
-          }}>
-            FZ
-          </div>
+          <img 
+            src="/favicon.svg" 
+            alt="FiscalZap" 
+            style={{
+              width: '38px',
+              height: '38px',
+              borderRadius: '10px',
+              boxShadow: '0 4px 12px rgba(99, 102, 241, 0.35)',
+              flexShrink: 0
+            }} 
+          />
           <div className="brand-text">
             <h2 className="sidebar-title" style={{ fontSize: '1.25rem', fontWeight: 800, margin: 0, letterSpacing: '-0.02em', lineHeight: 1.1 }}>
               FiscalZap

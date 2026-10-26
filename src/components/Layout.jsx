@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../components/AuthProvider';
 import { supabase } from '../lib/supabase';
-import { LogOut, ChevronLeft, ChevronRight, Plus, Filter, Settings, Sun, Moon, UploadCloud } from 'lucide-react';
+import { LogOut, ChevronLeft, ChevronRight, Plus, Filter, Settings, Sun, Moon, UploadCloud, ChevronDown } from 'lucide-react';
 import { 
   format, addMonths, subMonths, startOfMonth, endOfMonth, 
   startOfWeek, endOfWeek, isSameMonth, isSameDay, addDays, eachDayOfInterval
@@ -31,6 +31,18 @@ export default function Layout() {
   const [isBoletoModalOpen, setIsBoletoModalOpen] = useState(false);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [isLightMode, setIsLightMode] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const userMenuRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target)) {
+        setIsUserMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   useEffect(() => {
     // Verifica tema salvo ou preferência do sistema
@@ -118,161 +130,178 @@ export default function Layout() {
       
       <header style={{ 
         display: 'flex', justifyContent: 'space-between', alignItems: 'center', 
-        marginBottom: '1.75rem', paddingBottom: '1.25rem', borderBottom: '1px solid var(--border-color)',
-        flexWrap: 'wrap', gap: '16px'
+        marginBottom: '1.5rem', paddingBottom: '1rem', borderBottom: '1px solid var(--border-color)',
+        flexWrap: 'nowrap', gap: '8px'
       }}>
-        {/* Esquerda: Menu do Usuário (Tema e Sair no lugar do antigo "Fluxo de Caixa") */}
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '12px',
-          background: 'var(--bg-secondary)',
-          padding: '6px 12px 6px 8px',
-          borderRadius: '16px',
-          border: '1px solid var(--border-color)',
-          boxShadow: 'var(--shadow-sm)'
-        }}>
-          {/* Avatar com inicial */}
-          <div style={{
-            width: '36px',
-            height: '36px',
-            borderRadius: '10px',
-            background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: '#fff',
-            fontWeight: 800,
-            fontSize: '0.95rem',
-            boxShadow: '0 2px 8px rgba(99, 102, 241, 0.35)',
-            flexShrink: 0
-          }}>
-            {user?.email ? user.email.charAt(0).toUpperCase() : 'U'}
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+        {/* Esquerda: Menu Retrátil do Usuário */}
+        <div ref={userMenuRef} style={{ position: 'relative', flexShrink: 0 }}>
+          <button
+            onClick={() => setIsUserMenuOpen(prev => !prev)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              background: 'var(--bg-secondary)',
+              padding: '4px 10px 4px 6px',
+              borderRadius: '14px',
+              border: isUserMenuOpen ? '1px solid var(--accent-primary)' : '1px solid var(--border-color)',
+              cursor: 'pointer',
+              boxShadow: 'var(--shadow-sm)',
+              height: '38px',
+              transition: 'all 0.2s'
+            }}
+            title="Menu do usuário"
+          >
+            <div style={{
+              width: '28px',
+              height: '28px',
+              borderRadius: '8px',
+              background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#fff',
+              fontWeight: 800,
+              fontSize: '0.8rem',
+              boxShadow: '0 2px 6px rgba(99, 102, 241, 0.35)',
+              flexShrink: 0
+            }}>
+              {user?.email ? user.email.charAt(0).toUpperCase() : 'U'}
+            </div>
             <span style={{
-              fontSize: '0.85rem',
+              fontSize: '0.82rem',
               fontWeight: 700,
               color: 'var(--text-primary)',
-              maxWidth: '180px',
+              maxWidth: '95px',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
-              lineHeight: 1.2
+              whiteSpace: 'nowrap'
             }}>
               {user?.email?.split('@')[0]}
             </span>
-            <span style={{
-              fontSize: '0.68rem',
-              color: 'var(--text-muted)',
-              maxWidth: '180px',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
-              lineHeight: 1.1
+            <ChevronDown size={14} color="var(--text-secondary)" style={{ transform: isUserMenuOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+          </button>
+
+          {/* Painel Suspenso (Dropdown Retrátil) */}
+          {isUserMenuOpen && (
+            <div style={{
+              position: 'absolute',
+              top: 'calc(100% + 8px)',
+              left: 0,
+              zIndex: 200,
+              minWidth: '220px',
+              background: 'var(--modal-bg)',
+              border: '1px solid var(--border-color)',
+              borderRadius: '16px',
+              boxShadow: 'var(--shadow-lg)',
+              padding: '8px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '4px',
+              backdropFilter: 'blur(16px)'
             }}>
-              {user?.email}
-            </span>
-          </div>
+              {/* Identificação do Usuário */}
+              <div style={{ padding: '8px 10px', borderBottom: '1px solid var(--border-color)', marginBottom: '4px' }}>
+                <span style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--text-primary)', display: 'block' }}>
+                  {user?.email?.split('@')[0]}
+                </span>
+                <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'block', wordBreak: 'break-all' }}>
+                  {user?.email}
+                </span>
+              </div>
 
-          <div style={{ width: '1px', height: '22px', background: 'var(--border-color)', margin: '0 2px' }} />
+              {/* Opção Alternar Tema */}
+              <button
+                onClick={() => { toggleTheme(); }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  width: '100%',
+                  padding: '8px 10px',
+                  background: 'transparent',
+                  border: 'none',
+                  borderRadius: '10px',
+                  color: 'var(--text-primary)',
+                  fontSize: '0.84rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  transition: 'background 0.15s'
+                }}
+                onMouseOver={(e) => e.currentTarget.style.background = 'var(--item-hover-bg)'}
+                onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
+              >
+                {isLightMode ? <Moon size={16} color="var(--accent-primary)" /> : <Sun size={16} color="var(--accent-primary)" />}
+                <span>{isLightMode ? 'Modo Escuro' : 'Modo Claro'}</span>
+              </button>
 
-          {/* Botão Alternar Tema */}
-          <button
-            onClick={toggleTheme}
-            style={{
-              background: 'transparent',
-              border: 'none',
-              color: 'var(--text-secondary)',
-              cursor: 'pointer',
-              width: '32px',
-              height: '32px',
-              borderRadius: '8px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              transition: 'all 0.2s'
-            }}
-            onMouseOver={(e) => {
-              e.currentTarget.style.background = 'var(--item-hover-bg)';
-              e.currentTarget.style.color = 'var(--accent-primary)';
-            }}
-            onMouseOut={(e) => {
-              e.currentTarget.style.background = 'transparent';
-              e.currentTarget.style.color = 'var(--text-secondary)';
-            }}
-            title={isLightMode ? 'Ativar modo escuro' : 'Ativar modo claro'}
-          >
-            {isLightMode ? <Moon size={18} /> : <Sun size={18} />}
-          </button>
-
-          {/* Botão Sair */}
-          <button
-            onClick={handleLogout}
-            style={{
-              background: 'transparent',
-              border: 'none',
-              color: '#fb7185',
-              cursor: 'pointer',
-              width: '32px',
-              height: '32px',
-              borderRadius: '8px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              transition: 'all 0.2s'
-            }}
-            onMouseOver={(e) => {
-              e.currentTarget.style.background = 'rgba(244, 63, 94, 0.12)';
-            }}
-            onMouseOut={(e) => {
-              e.currentTarget.style.background = 'transparent';
-            }}
-            title="Sair da conta"
-          >
-            <LogOut size={18} />
-          </button>
+              {/* Opção Sair */}
+              <button
+                onClick={() => { setIsUserMenuOpen(false); handleLogout(); }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  width: '100%',
+                  padding: '8px 10px',
+                  background: 'transparent',
+                  border: 'none',
+                  borderRadius: '10px',
+                  color: '#fb7185',
+                  fontSize: '0.84rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  transition: 'background 0.15s'
+                }}
+                onMouseOver={(e) => e.currentTarget.style.background = 'rgba(244, 63, 94, 0.1)'}
+                onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
+              >
+                <LogOut size={16} />
+                <span>Sair da Conta</span>
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Centro: Navegação de Mês */}
         <div style={{
           display: 'flex',
           alignItems: 'center',
-          gap: '12px',
+          gap: '8px',
           background: 'var(--bg-secondary)',
-          padding: '6px 12px',
-          borderRadius: '16px',
+          padding: '4px 10px',
+          borderRadius: '14px',
           border: '1px solid var(--border-color)',
-          boxShadow: 'var(--shadow-sm)'
+          boxShadow: 'var(--shadow-sm)',
+          height: '38px',
+          flexShrink: 0
         }}>
           <button
             className="btn"
             onClick={prevMonth}
             style={{
-              padding: '6px',
+              padding: '4px',
               background: 'transparent',
               border: 'none',
               cursor: 'pointer',
-              borderRadius: '8px',
+              borderRadius: '6px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: 'var(--text-secondary)',
-              transition: 'all 0.2s'
+              color: 'var(--text-secondary)'
             }}
-            onMouseOver={(e) => e.currentTarget.style.background = 'var(--item-hover-bg)'}
-            onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
             title="Mês anterior"
           >
-            <ChevronLeft size={20} />
+            <ChevronLeft size={18} />
           </button>
           
           <h2 style={{
-            fontSize: '1.05rem',
+            fontSize: '0.95rem',
             fontWeight: 800,
             letterSpacing: '-0.01em',
-            minWidth: '160px',
+            minWidth: '135px',
             textAlign: 'center',
             margin: 0,
             textTransform: 'capitalize',
@@ -285,27 +314,24 @@ export default function Layout() {
             className="btn"
             onClick={nextMonth}
             style={{
-              padding: '6px',
+              padding: '4px',
               background: 'transparent',
               border: 'none',
               cursor: 'pointer',
-              borderRadius: '8px',
+              borderRadius: '6px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: 'var(--text-secondary)',
-              transition: 'all 0.2s'
+              color: 'var(--text-secondary)'
             }}
-            onMouseOver={(e) => e.currentTarget.style.background = 'var(--item-hover-bg)'}
-            onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
             title="Próximo mês"
           >
-            <ChevronRight size={20} />
+            <ChevronRight size={18} />
           </button>
         </div>
 
         {/* Direita: Filtro por Categoria e Importar Boleto */}
-        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexShrink: 0 }}>
           
           {/* Seletor de Categoria */}
           <div style={{
@@ -314,11 +340,11 @@ export default function Layout() {
             background: 'var(--bg-secondary)',
             borderRadius: '14px',
             border: '1px solid var(--border-color)',
-            padding: '0 12px',
-            height: '42px',
+            padding: '0 10px',
+            height: '38px',
             boxShadow: 'var(--shadow-sm)'
           }}>
-            <Filter size={16} color="var(--text-secondary)" style={{ marginRight: '8px', flexShrink: 0 }} />
+            <Filter size={15} color="var(--text-secondary)" style={{ marginRight: '6px', flexShrink: 0 }} />
             <select 
               value={filterCategoryId} 
               onChange={(e) => setFilterCategoryId(e.target.value)}
@@ -326,14 +352,15 @@ export default function Layout() {
                 background: 'transparent',
                 border: 'none',
                 color: 'var(--text-primary)',
-                padding: '0.5rem 0',
+                padding: '0.4rem 0',
                 outline: 'none',
                 cursor: 'pointer',
-                fontSize: '0.875rem',
-                fontWeight: 500
+                fontSize: '0.82rem',
+                fontWeight: 500,
+                maxWidth: '130px'
               }}
             >
-              <option value="">Todas as Categorias</option>
+              <option value="">Todas Categorias</option>
               {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
             <button 
@@ -343,19 +370,16 @@ export default function Layout() {
                 border: 'none',
                 color: 'var(--text-secondary)',
                 cursor: 'pointer',
-                marginLeft: '8px',
-                padding: '6px',
+                marginLeft: '6px',
+                padding: '4px',
                 borderRadius: '6px',
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center',
-                transition: 'all 0.2s'
+                justifyContent: 'center'
               }}
-              onMouseOver={(e) => e.currentTarget.style.color = 'var(--accent-primary)'}
-              onMouseOut={(e) => e.currentTarget.style.color = 'var(--text-secondary)'}
               title="Gerenciar Categorias"
             >
-              <Settings size={16} />
+              <Settings size={15} />
             </button>
           </div>
 
@@ -366,31 +390,21 @@ export default function Layout() {
             style={{ 
               display: 'inline-flex', 
               alignItems: 'center', 
-              gap: '8px', 
-              height: '42px',
-              padding: '0 16px',
+              gap: '6px', 
+              height: '38px',
+              padding: '0 14px',
               borderRadius: '14px',
-              fontSize: '0.875rem',
+              fontSize: '0.82rem',
               fontWeight: 700,
-              letterSpacing: '0.01em',
               background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
-              boxShadow: '0 4px 14px rgba(99, 102, 241, 0.35)',
+              boxShadow: '0 4px 12px rgba(99, 102, 241, 0.35)',
               border: 'none',
               cursor: 'pointer',
-              transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
               whiteSpace: 'nowrap',
               color: '#fff'
             }}
-            onMouseOver={(e) => {
-              e.currentTarget.style.transform = 'translateY(-1px)';
-              e.currentTarget.style.boxShadow = '0 6px 18px rgba(99, 102, 241, 0.5)';
-            }}
-            onMouseOut={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = '0 4px 14px rgba(99, 102, 241, 0.35)';
-            }}
           >
-            <UploadCloud size={18} strokeWidth={2.4} />
+            <UploadCloud size={16} strokeWidth={2.4} />
             <span>Importar Boleto</span>
           </button>
         </div>
