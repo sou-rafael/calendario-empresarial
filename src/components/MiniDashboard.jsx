@@ -1,8 +1,9 @@
 import React from 'react';
+import { supabase } from '../lib/supabase';
 import { format, addDays, isAfter, isBefore, startOfDay } from 'date-fns';
-import { TrendingDown, TrendingUp, AlertCircle, PieChart } from 'lucide-react';
+import { TrendingDown, TrendingUp, AlertCircle, PieChart, Check } from 'lucide-react';
 
-export default function MiniDashboard({ bills, currentDate, categories, currentContext }) {
+export default function MiniDashboard({ bills, currentDate, categories, currentContext, onBillSaved }) {
   const currentMonthPrefix = format(currentDate, 'yyyy-MM');
   const currentMonthBills = bills.filter(b => b.date && b.date.startsWith(currentMonthPrefix));
   
@@ -34,6 +35,17 @@ export default function MiniDashboard({ bills, currentDate, categories, currentC
       .reduce((acc, b) => acc + Number(b.amount), 0);
     return { name: cat.name, sum };
   }).filter(c => c.sum > 0).sort((a, b) => b.sum - a.sum).slice(0, 4);
+
+  const handleToggleStatus = async (id, currentStatus) => {
+    const newStatus = currentStatus === 'Pago' ? 'Pendente' : 'Pago';
+    try {
+      const { error } = await supabase.from('bills').update({ status: newStatus }).eq('id', id);
+      if (error) throw error;
+      if (onBillSaved) onBillSaved();
+    } catch (err) {
+      alert('Erro ao atualizar status da conta: ' + err.message);
+    }
+  };
 
   return (
     <aside className="mini-dashboard">
@@ -139,7 +151,32 @@ export default function MiniDashboard({ bills, currentDate, categories, currentC
                     <span className="upcoming-desc" style={{ fontSize: '0.88rem', fontWeight: 600 }}>{bill.description}</span>
                     <span className="upcoming-date" style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{format(new Date(bill.date + 'T00:00:00'), 'dd/MM')} • {cat?.name}</span>
                   </div>
-                  <div className="upcoming-amount" style={{ fontSize: '0.9rem', fontWeight: 800, color: '#ef4444' }}>R$ {Number(bill.amount).toFixed(2).replace('.', ',')}</div>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
+                    <div className="upcoming-amount" style={{ fontSize: '0.9rem', fontWeight: 800, color: '#ef4444' }}>
+                      R$ {Number(bill.amount).toFixed(2).replace('.', ',')}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleToggleStatus(bill.id, bill.status)}
+                      style={{
+                        background: 'rgba(16, 185, 129, 0.12)',
+                        border: '1px solid rgba(16, 185, 129, 0.3)',
+                        color: '#10b981',
+                        borderRadius: '6px',
+                        padding: '3px 8px',
+                        fontSize: '0.72rem',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '3px',
+                        transition: 'all 0.15s'
+                      }}
+                      title="Dar baixa nesta conta"
+                    >
+                      <Check size={11} strokeWidth={2.5} /> Baixar
+                    </button>
+                  </div>
                 </div>
               );
             })}

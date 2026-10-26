@@ -411,7 +411,7 @@ export default function Layout() {
       </main>
       </div>
 
-      <MiniDashboard bills={bills} currentDate={currentDate} categories={categories} currentContext={currentContext} />
+      <MiniDashboard bills={bills} currentDate={currentDate} categories={categories} currentContext={currentContext} onBillSaved={fetchBills} />
 
       <BoletoImportModal
         isOpen={isBoletoModalOpen}

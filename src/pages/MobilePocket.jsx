@@ -160,11 +160,16 @@ export default function MobilePocket() {
     }
   };
 
-  // Filtrar os próximos vencimentos a partir de hoje
+  // Filtrar os próximos vencimentos a partir de hoje (priorizando pendências)
   const todayStr = format(new Date(), 'yyyy-MM-dd');
-  const upcomingBills = bills
+  const upcomingBills = [...bills]
     .filter(b => b.date >= todayStr)
-    .slice(0, 4);
+    .sort((a, b) => {
+      if (a.status !== 'Pago' && b.status === 'Pago') return -1;
+      if (a.status === 'Pago' && b.status !== 'Pago') return 1;
+      return a.date.localeCompare(b.date);
+    })
+    .slice(0, 6);
 
   const totalUpcoming = upcomingBills.reduce((acc, b) => acc + Number(b.amount), 0);
 
@@ -172,7 +177,18 @@ export default function MobilePocket() {
     if (!code) return;
     navigator.clipboard.writeText(code.replace(/[^0-9]/g, ''));
     setCopiedId(id);
-    setTimeout(() => setCopiedId(null), 2000);
+    setTimeout(() => setCopiedId(null), 3000);
+  };
+
+  const handleToggleStatus = async (id, currentStatus) => {
+    const newStatus = currentStatus === 'Pago' ? 'Pendente' : 'Pago';
+    try {
+      const { error } = await supabase.from('bills').update({ status: newStatus }).eq('id', id);
+      if (error) throw error;
+      fetchData();
+    } catch (err) {
+      alert('Erro ao atualizar status da conta: ' + err.message);
+    }
   };
 
   const handleVoiceToggle = () => {
@@ -523,13 +539,20 @@ export default function MobilePocket() {
                 {upcomingBills.map(bill => {
                   const billDate = parseISO(bill.date);
                   const isDueToday = isToday(billDate);
+                  const isPaid = bill.status === 'Pago';
                   
                   return (
                     <div key={bill.id} style={{
-                      background: isDueToday 
-                        ? (isLightMode ? 'rgba(239, 68, 68, 0.08)' : 'rgba(239, 68, 68, 0.12)') 
-                        : 'var(--bg-secondary)',
-                      border: isDueToday ? '1px solid rgba(239, 68, 68, 0.4)' : '1px solid var(--border-color)',
+                      background: isPaid
+                        ? 'rgba(16, 185, 129, 0.06)'
+                        : isDueToday 
+                          ? (isLightMode ? 'rgba(239, 68, 68, 0.08)' : 'rgba(239, 68, 68, 0.12)') 
+                          : 'var(--bg-secondary)',
+                      border: isPaid
+                        ? '1px solid rgba(16, 185, 129, 0.25)'
+                        : isDueToday 
+                          ? '1px solid rgba(239, 68, 68, 0.4)' 
+                          : '1px solid var(--border-color)',
                       borderRadius: '14px',
                       padding: '0.85rem 1rem',
                       display: 'flex',
@@ -538,69 +561,121 @@ export default function MobilePocket() {
                       boxShadow: 'var(--shadow-sm)'
                     }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                        <div>
-                          <div style={{ fontWeight: 700, color: 'var(--text-primary)', fontSize: '0.92rem' }}>{bill.description}</div>
-                          <div style={{ fontSize: '0.75rem', color: isDueToday ? '#ef4444' : 'var(--text-muted)', marginTop: '2px', fontWeight: 600 }}>
-                            {isDueToday ? '⚠️ VENCE HOJE' : `Vence ${format(billDate, "dd 'de' MMM", { locale: ptBR })}`}
+                        <div style={{ flex: 1, minWidth: 0, paddingRight: '8px' }}>
+                          <div style={{ 
+                            fontWeight: 700, 
+                            color: 'var(--text-primary)', 
+                            fontSize: '0.92rem',
+                            textDecoration: isPaid ? 'line-through' : 'none',
+                            opacity: isPaid ? 0.75 : 1
+                          }}>
+                            {bill.description}
+                          </div>
+                          <div style={{ 
+                            fontSize: '0.75rem', 
+                            color: isPaid ? '#10b981' : isDueToday ? '#ef4444' : 'var(--text-muted)', 
+                            marginTop: '2px', 
+                            fontWeight: 700 
+                          }}>
+                            {isPaid ? '✅ PAGO' : isDueToday ? '⚠️ VENCE HOJE' : `Vence ${format(billDate, "dd 'de' MMM", { locale: ptBR })}`}
                           </div>
                         </div>
-                        <div style={{ fontSize: '1.05rem', fontWeight: 800, color: '#ef4444', letterSpacing: '-0.02em' }}>
+                        <div style={{ 
+                          fontSize: '1.05rem', 
+                          fontWeight: 800, 
+                          color: isPaid ? '#10b981' : '#ef4444', 
+                          letterSpacing: '-0.02em',
+                          flexShrink: 0
+                        }}>
                           R$ {Number(bill.amount).toFixed(2).replace('.', ',')}
                         </div>
                       </div>
 
-                      {/* Ações com 1 Toque: Copiar Linha Digitável ou Ver PDF */}
-                      {(bill.barcode || bill.file_url) && (
-                        <div style={{ display: 'flex', gap: '6px', paddingTop: '4px', borderTop: '1px solid var(--border-color)' }}>
-                          {bill.barcode && (
-                            <button
-                              onClick={() => copyBarcode(bill.barcode, bill.id)}
-                              style={{
-                                flex: 1,
-                                background: copiedId === bill.id ? 'rgba(52, 211, 153, 0.15)' : 'rgba(99, 102, 241, 0.12)',
-                                border: copiedId === bill.id ? '1px solid #34d399' : '1px solid rgba(99, 102, 241, 0.3)',
-                                color: copiedId === bill.id ? '#10b981' : 'var(--accent-primary)',
-                                borderRadius: '8px',
-                                padding: '6px 8px',
-                                fontSize: '0.72rem',
-                                fontWeight: 700,
-                                cursor: 'pointer',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                gap: '5px'
-                              }}
-                            >
-                              {copiedId === bill.id ? <Check size={12} /> : <Copy size={12} />}
-                              {copiedId === bill.id ? 'Copiado!' : 'Copiar Código'}
-                            </button>
-                          )}
-
-                          {bill.file_url && (
-                            <a
-                              href={bill.file_url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              style={{
-                                background: 'rgba(52, 211, 153, 0.12)',
-                                border: '1px solid rgba(52, 211, 153, 0.3)',
-                                color: '#10b981',
-                                borderRadius: '8px',
-                                padding: '6px 10px',
-                                fontSize: '0.72rem',
-                                fontWeight: 700,
-                                textDecoration: 'none',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '4px'
-                              }}
-                            >
-                              <ExternalLink size={12} />
-                              PDF
-                            </a>
-                          )}
+                      {/* Dica amigável pós-cópia */}
+                      {copiedId === bill.id && !isPaid && (
+                        <div style={{ fontSize: '0.72rem', color: '#10b981', fontWeight: 600, background: 'rgba(16, 185, 129, 0.1)', padding: '4px 8px', borderRadius: '6px' }}>
+                          Código copiado! Após pagar no banco, toque em <strong>Dar Baixa</strong> abaixo.
                         </div>
                       )}
+
+                      {/* Linha de Ações: Baixa Rápida em 1 Toque + Código + PDF */}
+                      <div style={{ display: 'flex', gap: '6px', paddingTop: '6px', borderTop: '1px solid var(--border-color)', alignItems: 'center' }}>
+                        {/* Botão Baixa Rápida */}
+                        <button
+                          type="button"
+                          onClick={() => handleToggleStatus(bill.id, bill.status)}
+                          style={{
+                            flex: 1,
+                            background: isPaid ? 'rgba(16, 185, 129, 0.15)' : 'rgba(16, 185, 129, 0.1)',
+                            border: isPaid ? '1px solid #10b981' : '1px solid rgba(16, 185, 129, 0.35)',
+                            color: isPaid ? '#10b981' : '#059669',
+                            borderRadius: '8px',
+                            padding: '6px 10px',
+                            fontSize: '0.75rem',
+                            fontWeight: 700,
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '5px',
+                            transition: 'all 0.2s'
+                          }}
+                          title={isPaid ? 'Clique para reabrir (tornar Pendente)' : 'Clique para dar baixa (marcar como Pago)'}
+                        >
+                          <Check size={13} strokeWidth={2.5} />
+                          <span>{isPaid ? 'Pago ✓' : 'Dar Baixa'}</span>
+                        </button>
+
+                        {bill.barcode && (
+                          <button
+                            type="button"
+                            onClick={() => copyBarcode(bill.barcode, bill.id)}
+                            style={{
+                              flex: 1,
+                              background: copiedId === bill.id ? 'rgba(52, 211, 153, 0.15)' : 'rgba(99, 102, 241, 0.12)',
+                              border: copiedId === bill.id ? '1px solid #34d399' : '1px solid rgba(99, 102, 241, 0.3)',
+                              color: copiedId === bill.id ? '#10b981' : 'var(--accent-primary)',
+                              borderRadius: '8px',
+                              padding: '6px 8px',
+                              fontSize: '0.72rem',
+                              fontWeight: 700,
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: '5px'
+                            }}
+                          >
+                            {copiedId === bill.id ? <Check size={12} /> : <Copy size={12} />}
+                            <span>{copiedId === bill.id ? 'Copiado!' : 'Copiar Código'}</span>
+                          </button>
+                        )}
+
+                        {bill.file_url && (
+                          <a
+                            href={bill.file_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{
+                              background: 'rgba(52, 211, 153, 0.12)',
+                              border: '1px solid rgba(52, 211, 153, 0.3)',
+                              color: '#10b981',
+                              borderRadius: '8px',
+                              padding: '6px 10px',
+                              fontSize: '0.72rem',
+                              fontWeight: 700,
+                              textDecoration: 'none',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: '4px'
+                            }}
+                          >
+                            <ExternalLink size={12} />
+                            <span>PDF</span>
+                          </a>
+                        )}
+                      </div>
                     </div>
                   );
                 })}
