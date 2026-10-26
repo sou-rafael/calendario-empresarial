@@ -1,4 +1,4 @@
-import { format, addDays, nextMonday, nextFriday } from 'date-fns';
+import { format, addDays, nextMonday, nextTuesday, nextWednesday, nextThursday, nextFriday, nextSaturday, nextSunday } from 'date-fns';
 
 /**
  * Analisa e extrai dados de compromissos financeiros a partir de texto transcrito em português.
@@ -13,11 +13,8 @@ export function parseVoiceExpense(text, availableCategories = []) {
   // 1. Extração do Valor Numérico (Suporta: "r$150", "r$ 150", "150 reais", "150,50")
   let amount = 0;
   
-  // Procura padrão R$ seguido de número
   const rDollarMatch = lower.match(/r\$\s*(\d+(?:[.,]\d{1,2})?)/i);
-  // Procura número seguido de reais/real
   const realWordMatch = lower.match(/(\d+(?:[.,]\d{1,2})?)\s*(?:reais|real)/i);
-  // Procura qualquer número solto no texto
   const rawNumberMatch = lower.match(/\b\d+(?:[.,]\d{2})?\b/);
 
   if (rDollarMatch) {
@@ -37,8 +34,18 @@ export function parseVoiceExpense(text, availableCategories = []) {
     dueDate = format(addDays(now, 2), 'yyyy-MM-dd');
   } else if (lower.includes('segunda')) {
     dueDate = format(nextMonday(now), 'yyyy-MM-dd');
+  } else if (lower.includes('terça') || lower.includes('terca')) {
+    dueDate = format(nextTuesday(now), 'yyyy-MM-dd');
+  } else if (lower.includes('quarta')) {
+    dueDate = format(nextWednesday(now), 'yyyy-MM-dd');
+  } else if (lower.includes('quinta')) {
+    dueDate = format(nextThursday(now), 'yyyy-MM-dd');
   } else if (lower.includes('sexta')) {
     dueDate = format(nextFriday(now), 'yyyy-MM-dd');
+  } else if (lower.includes('sábado') || lower.includes('sabado')) {
+    dueDate = format(nextSaturday(now), 'yyyy-MM-dd');
+  } else if (lower.includes('domingo')) {
+    dueDate = format(nextSunday(now), 'yyyy-MM-dd');
   } else {
     const dayMatch = lower.match(/(?:dia|no\s*dia|pra\s*o\s*dia|para\s*o\s*dia)\s*(\d{1,2})/i);
     if (dayMatch && dayMatch[1]) {
@@ -99,19 +106,29 @@ export function parseVoiceExpense(text, availableCategories = []) {
     'conta', 'boleto', 'fatura', 'pagamento', 'compromisso',
     'de', 'da', 'do', 'das', 'dos', 'a', 'o', 'as', 'os', 'um', 'uma', 'uns', 'umas',
     'no', 'na', 'nos', 'nas', 'pra', 'para', 'pro', 'por', 'com',
-    'hoje', 'amanhã', 'amanha', 'depois', 'ontem', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado', 'domingo',
+    'hoje', 'amanhã', 'amanha', 'depois', 'ontem',
+    // Dias da semana (simples e compostos com ou sem hífen)
+    'segunda', 'segundafeira', 'terça', 'terca', 'tercafeira', 'terçafeira',
+    'quarta', 'quartafeira', 'quinta', 'quintafeira', 'sexta', 'sextafeira',
+    'sábado', 'sabado', 'domingo', 'feira',
     'dia', 'valor', 'reais', 'real', 'r$', 'custou', 'r'
   ]);
 
-  const rawWords = originalText.split(/\s+/);
+  // Primeiro remove explicitamente padrões de dias compostos (ex: "segunda-feira", "terça feira")
+  let normalizedText = originalText
+    .replace(/\b(?:segunda|terça|terca|quarta|quinta|sexta)[\s-]+feira\b/gi, '')
+    .replace(/\br\$\s*/gi, '')
+    .trim();
+
+  const rawWords = normalizedText.split(/\s+/);
   const filteredWords = [];
 
   for (let i = 0; i < rawWords.length; i++) {
     const rawWord = rawWords[i];
     const cleanWord = rawWord.toLowerCase().replace(/[^a-z0-9áàâãéèêíïóôõöúçñ]/gi, '');
 
-    // Se a palavra contém ou começa com r$ (ex: "R$150"), ignora
-    if (/^r\$\d*/i.test(rawWord) || /^\d+([.,]\d+)?$/.test(cleanWord)) {
+    // Se for número puro ou número com centavos, pula
+    if (/^\d+([.,]\d+)?$/.test(cleanWord)) {
       continue;
     }
 
