@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase';
 import { X, UploadCloud, FileText, CheckCircle2, AlertCircle, Copy, Check, Loader2 } from 'lucide-react';
 import { parseBoleto } from '../utils/boletoParser';
 import { extractBoletoFromPdf } from '../utils/pdfReader';
+import CustomSelect from './CustomSelect';
 
 export default function BoletoImportModal({ isOpen, onClose, user, categories, onImportSuccess }) {
   const [barcodeInput, setBarcodeInput] = useState('');
@@ -376,27 +377,13 @@ export default function BoletoImportModal({ isOpen, onClose, user, categories, o
             <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: '6px' }}>
               Categoria *
             </label>
-            <select
+            <CustomSelect
               value={categoryId}
-              onChange={(e) => setCategoryId(e.target.value)}
+              onChange={setCategoryId}
+              options={categories}
+              placeholder="Selecione uma categoria..."
               required
-              style={{
-                width: '100%',
-                background: 'var(--input-bg)',
-                border: '1px solid var(--input-border)',
-                borderRadius: '12px',
-                padding: '0.8rem 1rem',
-                color: 'var(--text-primary)',
-                fontSize: '0.95rem',
-                outline: 'none',
-                cursor: 'pointer'
-              }}
-            >
-              <option value="" style={{ background: 'var(--modal-bg)', color: 'var(--text-primary)' }}>Selecione uma categoria...</option>
-              {categories.map((c) => (
-                <option key={c.id} value={c.id} style={{ background: 'var(--modal-bg)', color: 'var(--text-primary)' }}>{c.name}</option>
-              ))}
-            </select>
+            />
           </div>
 
           {/* Botão Salvar */}

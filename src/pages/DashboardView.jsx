@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer } from 'recharts';
 import { subMonths, format, startOfMonth, endOfMonth } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import CustomSelect from '../components/CustomSelect';
 
 const COLORS = ['#6366f1', '#ec4899', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444', '#14b8a6', '#f97316'];
 
@@ -94,20 +95,17 @@ export default function DashboardView() {
       {/* Header do Dashboard */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-primary)' }}>Visão Geral</h2>
-        <select 
-          value={timeframe} 
-          onChange={e => setTimeframe(e.target.value)}
-          style={{
-            background: 'var(--input-bg)', border: '1px solid var(--input-border)',
-            padding: '0.6rem 1rem', borderRadius: '8px', color: 'var(--text-primary)', fontSize: '0.9rem',
-            outline: 'none', cursor: 'pointer'
-          }}
-        >
-          <option value="1m">Último Mês</option>
-          <option value="3m">Últimos 3 Meses</option>
-          <option value="6m">Últimos 6 Meses</option>
-          <option value="1y">Este Ano</option>
-        </select>
+        <CustomSelect
+          value={timeframe}
+          onChange={setTimeframe}
+          options={[
+            { value: '1m', label: 'Último Mês' },
+            { value: '3m', label: 'Últimos 3 Meses' },
+            { value: '6m', label: 'Últimos 6 Meses' },
+            { value: '1y', label: 'Este Ano' }
+          ]}
+          style={{ width: '180px' }}
+        />
       </div>
 
       {loading ? (

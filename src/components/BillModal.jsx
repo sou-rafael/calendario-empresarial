@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { X, Check, Copy, FileText, ExternalLink, Paperclip } from 'lucide-react';
+import CustomSelect from './CustomSelect';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -276,19 +277,14 @@ export default function BillModal({ isOpen, onClose, selectedDate, user, categor
             />
 
             <div style={{ display: 'flex', gap: '10px' }}>
-              <select 
-                value={categoryId} onChange={e => setCategoryId(e.target.value)} required
-                style={{
-                  background: 'var(--input-bg)', border: '1px solid var(--input-border)',
-                  padding: '0.75rem 1rem', borderRadius: '12px', color: 'var(--text-primary)', fontSize: '0.9rem',
-                  outline: 'none', flex: 1, cursor: 'pointer'
-                }}
-              >
-                <option value="" style={{ background: 'var(--modal-bg)', color: 'var(--text-primary)' }}>Categoria</option>
-                {categories.map(c => (
-                  <option key={c.id} value={c.id} style={{ background: 'var(--modal-bg)', color: 'var(--text-primary)' }}>{c.name}</option>
-                ))}
-              </select>
+              <CustomSelect
+                value={categoryId} 
+                onChange={setCategoryId}
+                options={categories}
+                placeholder="Categoria *"
+                required
+                style={{ flex: 1 }}
+              />
 
               <input 
                 type="number" step="0.01" required

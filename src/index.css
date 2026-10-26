@@ -174,9 +174,18 @@ p {
   color: var(--text-muted);
 }
 
+/* Select Global Reset & Elegância */
+select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  font-family: inherit;
+}
+
 select option {
   background-color: var(--modal-bg);
   color: var(--text-primary);
+  padding: 8px 12px;
 }
 
 body.light-mode select option {

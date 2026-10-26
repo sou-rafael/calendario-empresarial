@@ -11,6 +11,7 @@ import { Outlet } from 'react-router-dom';
 import BillModal from './BillModal';
 import BoletoImportModal from './BoletoImportModal';
 import CategoryModal from './CategoryModal';
+import CustomSelect from './CustomSelect';
 import Sidebar from './Sidebar';
 import MiniDashboard from './MiniDashboard';
 
@@ -340,29 +341,21 @@ export default function Layout() {
             background: 'var(--bg-secondary)',
             borderRadius: '14px',
             border: '1px solid var(--border-color)',
-            padding: '0 10px',
+            padding: '0 6px 0 8px',
             height: '38px',
             boxShadow: 'var(--shadow-sm)'
           }}>
-            <Filter size={15} color="var(--text-secondary)" style={{ marginRight: '6px', flexShrink: 0 }} />
-            <select 
+            <CustomSelect
               value={filterCategoryId} 
-              onChange={(e) => setFilterCategoryId(e.target.value)}
-              style={{
-                background: 'transparent',
-                border: 'none',
-                color: 'var(--text-primary)',
-                padding: '0.4rem 0',
-                outline: 'none',
-                cursor: 'pointer',
-                fontSize: '0.82rem',
-                fontWeight: 500,
-                maxWidth: '130px'
-              }}
-            >
-              <option value="">Todas Categorias</option>
-              {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-            </select>
+              onChange={(val) => setFilterCategoryId(val)}
+              options={[
+                { value: '', label: 'Todas Categorias' },
+                ...categories
+              ]}
+              placeholder="Todas Categorias"
+              icon={<Filter size={14} color="var(--text-secondary)" />}
+              compact
+            />
             <button 
               onClick={() => setIsCategoryModalOpen(true)}
               style={{
@@ -370,13 +363,16 @@ export default function Layout() {
                 border: 'none',
                 color: 'var(--text-secondary)',
                 cursor: 'pointer',
-                marginLeft: '6px',
+                marginLeft: '4px',
                 padding: '4px',
                 borderRadius: '6px',
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center'
+                justifyContent: 'center',
+                transition: 'all 0.2s'
               }}
+              onMouseOver={(e) => e.currentTarget.style.color = 'var(--accent-primary)'}
+              onMouseOut={(e) => e.currentTarget.style.color = 'var(--text-secondary)'}
               title="Gerenciar Categorias"
             >
               <Settings size={15} />

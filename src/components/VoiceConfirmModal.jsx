@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase';
 import { X, Check, Calendar, Tag, DollarSign, Sparkles } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import CustomSelect from './CustomSelect';
 
 export default function VoiceConfirmModal({ isOpen, onClose, parsedData, categories, user, onSuccess }) {
   if (!isOpen || !parsedData) return null;
@@ -171,27 +172,13 @@ export default function VoiceConfirmModal({ isOpen, onClose, parsedData, categor
             <label style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
               Categoria *
             </label>
-            <select
+            <CustomSelect
               value={categoryId}
-              onChange={(e) => setCategoryId(e.target.value)}
+              onChange={setCategoryId}
+              options={categories}
+              placeholder="Selecione uma categoria..."
               required
-              style={{
-                width: '100%',
-                background: 'var(--bg-secondary)',
-                border: '1px solid var(--border-color)',
-                borderRadius: '12px',
-                padding: '0.75rem 1rem',
-                color: 'var(--text-primary)',
-                fontSize: '0.92rem',
-                outline: 'none',
-                cursor: 'pointer'
-              }}
-            >
-              <option value="" style={{ background: 'var(--modal-bg)', color: 'var(--text-primary)' }}>Selecione uma categoria...</option>
-              {categories.map((c) => (
-                <option key={c.id} value={c.id} style={{ background: 'var(--modal-bg)', color: 'var(--text-primary)' }}>{c.name}</option>
-              ))}
-            </select>
+            />
           </div>
 
           {/* Botões de Ação */}
