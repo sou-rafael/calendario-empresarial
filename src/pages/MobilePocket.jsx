@@ -101,19 +101,48 @@ export default function MobilePocket() {
     if (!user) return;
     setLoading(true);
     try {
+      // 1. Busca todas as categorias do usuário (para isolar os IDs empresariais)
+      const { data: allCategories } = await supabase
+        .from('categories')
+        .select('*')
+        .eq('user_id', user.id);
+
+      const allCats = allCategories || [];
+      const currentCats = allCats.filter(c => c.context === currentContext);
+      const onlyEmpresaCats = allCats.filter(c => c.context === 'empresarial');
+      const empresaCatIds = new Set(onlyEmpresaCats.map(c => c.id));
+
+      // 2. Busca as contas do usuário
       const { data: billsData } = await supabase
         .from('bills')
         .select('*')
         .eq('user_id', user.id)
         .order('date', { ascending: true });
 
-      const { data: catData } = await supabase
-        .from('categories')
-        .select('*')
-        .eq('context', currentContext);
+      const allBills = billsData || [];
 
-      setBills(billsData || []);
-      setCategories(catData || []);
+      // Filtra as contas do contexto ativo
+      const activeBills = allBills.filter(b => {
+        // Se a conta tem a coluna context explícita, usa ela
+        if (b.context) return b.context === currentContext;
+        // Caso contrário, vincula pela categoria
+        const cat = allCats.find(c => c.id === b.category_id);
+        return cat ? cat.context === currentContext : true;
+      });
+
+      // Filtra estritamente as contas EMPRESARIAIS para o Consultor
+      const strictlyEmpresaBills = allBills.filter(b => {
+        if (b.context) return b.context === 'empresarial';
+        if (b.category_id && empresaCatIds.has(b.category_id)) return true;
+        // Se a categoria for de contexto pessoal, exclui
+        const cat = allCats.find(c => c.id === b.category_id);
+        return cat ? cat.context === 'empresarial' : true;
+      });
+
+      setBills(activeBills);
+      setCategories(currentCats);
+      setEmpresaBills(strictlyEmpresaBills);
+      setEmpresaCategories(onlyEmpresaCats);
     } catch (err) {
       console.error('Erro ao buscar dados:', err);
     } finally {
@@ -506,7 +535,7 @@ export default function MobilePocket() {
 
       {/* Conteúdo da Aba CHAT (Consultor Fiscal Empresarial) */}
       {currentTab === 'chat' && (
-        <MobileChatView bills={bills} categories={categories} />
+        <MobileChatView bills={empresaBills} categories={empresaCategories} />
       )}
 
       {/* 4. BOTTOM NAVIGATION BAR (Navegação de Bolso Fixa) */}
