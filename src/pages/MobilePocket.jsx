@@ -3,7 +3,7 @@ import { useAuth } from '../components/AuthProvider';
 import { supabase } from '../lib/supabase';
 import { 
   Mic, UploadCloud, Copy, Check, ExternalLink, Calendar as CalendarIcon, 
-  MessageSquare, Briefcase, User, ChevronRight, AlertCircle, Sparkles, Monitor
+  MessageSquare, Briefcase, User, ChevronRight, AlertCircle, Sparkles, Monitor, Sun, Moon
 } from 'lucide-react';
 import { format, isAfter, isToday, parseISO, addDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -22,10 +22,32 @@ export default function MobilePocket() {
   const [loading, setLoading] = useState(true);
   const [copiedId, setCopiedId] = useState(null);
   const [isBoletoModalOpen, setIsBoletoModalOpen] = useState(false);
+  const [isLightMode, setIsLightMode] = useState(false);
 
   // Estado do botão de voz (preparado para Fase 2)
   const [isListening, setIsListening] = useState(false);
   const [voiceFeedback, setVoiceFeedback] = useState('');
+
+  useEffect(() => {
+    // Sincroniza tema salvo no localStorage
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'light') {
+      setIsLightMode(true);
+      document.body.classList.add('light-mode');
+    }
+  }, []);
+
+  const toggleTheme = () => {
+    if (isLightMode) {
+      document.body.classList.remove('light-mode');
+      localStorage.setItem('theme', 'dark');
+      setIsLightMode(false);
+    } else {
+      document.body.classList.add('light-mode');
+      localStorage.setItem('theme', 'light');
+      setIsLightMode(true);
+    }
+  };
 
   useEffect(() => {
     fetchData();
@@ -85,26 +107,26 @@ export default function MobilePocket() {
   return (
     <div style={{
       minHeight: '100vh',
-      backgroundColor: '#09090b',
-      color: '#f8fafc',
+      backgroundColor: 'var(--bg-color)',
+      color: 'var(--text-primary)',
       display: 'flex',
       flexDirection: 'column',
       maxWidth: '480px',
       margin: '0 auto',
       position: 'relative',
       paddingBottom: '80px',
-      boxShadow: '0 0 50px rgba(0,0,0,0.8)'
+      boxShadow: 'var(--shadow-lg)'
     }}>
       
       {/* 1. Header do Pocket */}
       <header style={{
-        padding: '1.25rem 1rem 0.75rem 1rem',
-        borderBottom: '1px solid rgba(255,255,255,0.08)',
+        padding: '1rem 0.85rem',
+        borderBottom: '1px solid var(--border-color)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        background: 'rgba(15, 17, 23, 0.8)',
-        backdropFilter: 'blur(12px)',
+        background: 'var(--bg-primary)',
+        backdropFilter: 'blur(16px)',
         position: 'sticky',
         top: 0,
         zIndex: 50
@@ -120,22 +142,22 @@ export default function MobilePocket() {
             FZ
           </div>
           <div>
-            <h1 style={{ fontSize: '1rem', fontWeight: 800, margin: 0, letterSpacing: '-0.02em' }}>FiscalZap</h1>
-            <span style={{ fontSize: '0.65rem', color: 'var(--accent-primary)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            <h1 style={{ fontSize: '0.95rem', fontWeight: 800, margin: 0, letterSpacing: '-0.02em', color: 'var(--text-primary)' }}>FiscalZap</h1>
+            <span style={{ fontSize: '0.62rem', color: 'var(--accent-primary)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
               Pocket Mobile
             </span>
           </div>
         </div>
 
-        {/* Alternador de Contexto (Empresa / Pessoal) e Atalho Desktop */}
+        {/* Controles: Contexto, Tema e Atalho Desktop */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <div style={{ display: 'flex', background: 'rgba(255,255,255,0.06)', borderRadius: '8px', padding: '2px' }}>
+          <div style={{ display: 'flex', background: 'var(--bg-secondary)', borderRadius: '8px', padding: '2px' }}>
             <button
               onClick={() => setCurrentContext('empresarial')}
               style={{
                 border: 'none', background: currentContext === 'empresarial' ? 'var(--accent-primary)' : 'transparent',
                 color: currentContext === 'empresarial' ? '#fff' : 'var(--text-muted)',
-                borderRadius: '6px', padding: '4px 8px', fontSize: '0.7rem', fontWeight: 700, cursor: 'pointer'
+                borderRadius: '6px', padding: '4px 7px', fontSize: '0.7rem', fontWeight: 700, cursor: 'pointer'
               }}
             >
               Empresa
@@ -145,19 +167,34 @@ export default function MobilePocket() {
               style={{
                 border: 'none', background: currentContext === 'pessoal' ? 'var(--accent-primary)' : 'transparent',
                 color: currentContext === 'pessoal' ? '#fff' : 'var(--text-muted)',
-                borderRadius: '6px', padding: '4px 8px', fontSize: '0.7rem', fontWeight: 700, cursor: 'pointer'
+                borderRadius: '6px', padding: '4px 7px', fontSize: '0.7rem', fontWeight: 700, cursor: 'pointer'
               }}
             >
               Pessoal
             </button>
           </div>
 
+          {/* Botão de Tema Sol/Lua */}
+          <button
+            onClick={toggleTheme}
+            title="Alternar Tema Claro / Escuro"
+            style={{
+              background: 'var(--bg-secondary)', border: '1px solid var(--border-color)',
+              color: 'var(--text-secondary)', padding: '6px', borderRadius: '8px', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center'
+            }}
+          >
+            {isLightMode ? <Moon size={15} /> : <Sun size={15} />}
+          </button>
+
+          {/* Atalho Desktop */}
           <button
             onClick={() => navigate('/')}
             title="Abrir versão Desktop completa"
             style={{
-              background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
-              color: 'var(--text-secondary)', padding: '6px', borderRadius: '8px', cursor: 'pointer'
+              background: 'var(--bg-secondary)', border: '1px solid var(--border-color)',
+              color: 'var(--text-secondary)', padding: '6px', borderRadius: '8px', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center'
             }}
           >
             <Monitor size={15} />
@@ -171,11 +208,13 @@ export default function MobilePocket() {
           
           {/* Card Resumo Rápido */}
           <div style={{
-            background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.12) 0%, rgba(20, 24, 30, 0.6) 100%)',
-            border: '1px solid rgba(129, 140, 248, 0.25)',
+            background: isLightMode 
+              ? 'linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(255, 255, 255, 0.9) 100%)' 
+              : 'linear-gradient(135deg, rgba(99, 102, 241, 0.12) 0%, rgba(20, 24, 30, 0.6) 100%)',
+            border: '1px solid var(--border-focus)',
             borderRadius: '20px',
             padding: '1.25rem',
-            boxShadow: '0 10px 25px -5px rgba(0,0,0,0.5)'
+            boxShadow: 'var(--shadow-md)'
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
               <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
@@ -185,7 +224,7 @@ export default function MobilePocket() {
                 {upcomingBills.length} contas na fila
               </span>
             </div>
-            <div style={{ fontSize: '1.75rem', fontWeight: 900, color: '#fff', letterSpacing: '-0.03em' }}>
+            <div style={{ fontSize: '1.75rem', fontWeight: 900, color: 'var(--text-primary)', letterSpacing: '-0.03em' }}>
               R$ {totalUpcoming.toFixed(2).replace('.', ',')}
             </div>
           </div>
@@ -235,7 +274,7 @@ export default function MobilePocket() {
               </button>
             </div>
 
-            <span style={{ fontSize: '1rem', fontWeight: 800, color: '#fff', marginTop: '1rem', letterSpacing: '-0.01em' }}>
+            <span style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--text-primary)', marginTop: '1rem', letterSpacing: '-0.01em' }}>
               {isListening ? 'Gravando sua voz...' : 'Ditar Compromisso'}
             </span>
             <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textAlign: 'center', marginTop: '4px', maxWidth: '280px' }}>
@@ -250,15 +289,16 @@ export default function MobilePocket() {
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '8px',
-                background: 'rgba(255,255,255,0.05)',
-                border: '1px solid rgba(255,255,255,0.1)',
-                color: '#e2e8f0',
+                background: 'var(--bg-secondary)',
+                border: '1px solid var(--border-color)',
+                color: 'var(--text-primary)',
                 padding: '0.65rem 1.25rem',
                 borderRadius: '12px',
                 fontSize: '0.82rem',
                 fontWeight: 600,
                 cursor: 'pointer',
-                transition: 'all 0.2s'
+                transition: 'all 0.2s',
+                boxShadow: 'var(--shadow-sm)'
               }}
             >
               <UploadCloud size={16} color="var(--accent-primary)" />
@@ -287,8 +327,8 @@ export default function MobilePocket() {
             ) : upcomingBills.length === 0 ? (
               <div style={{
                 textAlign: 'center', padding: '2rem 1rem',
-                background: 'rgba(255,255,255,0.02)', borderRadius: '16px',
-                border: '1px dashed rgba(255,255,255,0.08)', color: 'var(--text-muted)', fontSize: '0.85rem'
+                background: 'var(--bg-secondary)', borderRadius: '16px',
+                border: '1px dashed var(--border-color)', color: 'var(--text-muted)', fontSize: '0.85rem'
               }}>
                 Nenhuma conta próxima de vencer!
               </div>
@@ -300,37 +340,40 @@ export default function MobilePocket() {
                   
                   return (
                     <div key={bill.id} style={{
-                      background: isDueToday ? 'rgba(239, 68, 68, 0.08)' : 'rgba(255,255,255,0.03)',
-                      border: isDueToday ? '1px solid rgba(239, 68, 68, 0.3)' : '1px solid rgba(255,255,255,0.08)',
+                      background: isDueToday 
+                        ? (isLightMode ? 'rgba(239, 68, 68, 0.08)' : 'rgba(239, 68, 68, 0.12)') 
+                        : 'var(--bg-secondary)',
+                      border: isDueToday ? '1px solid rgba(239, 68, 68, 0.4)' : '1px solid var(--border-color)',
                       borderRadius: '14px',
                       padding: '0.85rem 1rem',
                       display: 'flex',
                       flexDirection: 'column',
-                      gap: '8px'
+                      gap: '8px',
+                      boxShadow: 'var(--shadow-sm)'
                     }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                         <div>
-                          <div style={{ fontWeight: 700, color: '#fff', fontSize: '0.92rem' }}>{bill.description}</div>
-                          <div style={{ fontSize: '0.75rem', color: isDueToday ? '#fb7185' : 'var(--text-muted)', marginTop: '2px', fontWeight: 600 }}>
+                          <div style={{ fontWeight: 700, color: 'var(--text-primary)', fontSize: '0.92rem' }}>{bill.description}</div>
+                          <div style={{ fontSize: '0.75rem', color: isDueToday ? '#ef4444' : 'var(--text-muted)', marginTop: '2px', fontWeight: 600 }}>
                             {isDueToday ? '⚠️ VENCE HOJE' : `Vence ${format(billDate, "dd 'de' MMM", { locale: ptBR })}`}
                           </div>
                         </div>
-                        <div style={{ fontSize: '1.05rem', fontWeight: 800, color: '#fb7185', letterSpacing: '-0.02em' }}>
+                        <div style={{ fontSize: '1.05rem', fontWeight: 800, color: '#ef4444', letterSpacing: '-0.02em' }}>
                           R$ {Number(bill.amount).toFixed(2).replace('.', ',')}
                         </div>
                       </div>
 
                       {/* Ações com 1 Toque: Copiar Linha Digitável ou Ver PDF */}
                       {(bill.barcode || bill.file_url) && (
-                        <div style={{ display: 'flex', gap: '6px', paddingTop: '4px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                        <div style={{ display: 'flex', gap: '6px', paddingTop: '4px', borderTop: '1px solid var(--border-color)' }}>
                           {bill.barcode && (
                             <button
                               onClick={() => copyBarcode(bill.barcode, bill.id)}
                               style={{
                                 flex: 1,
-                                background: copiedId === bill.id ? 'rgba(52, 211, 153, 0.15)' : 'rgba(99, 102, 241, 0.15)',
+                                background: copiedId === bill.id ? 'rgba(52, 211, 153, 0.15)' : 'rgba(99, 102, 241, 0.12)',
                                 border: copiedId === bill.id ? '1px solid #34d399' : '1px solid rgba(99, 102, 241, 0.3)',
-                                color: copiedId === bill.id ? '#34d399' : '#a5b4fc',
+                                color: copiedId === bill.id ? '#10b981' : 'var(--accent-primary)',
                                 borderRadius: '8px',
                                 padding: '6px 8px',
                                 fontSize: '0.72rem',
@@ -355,7 +398,7 @@ export default function MobilePocket() {
                               style={{
                                 background: 'rgba(52, 211, 153, 0.12)',
                                 border: '1px solid rgba(52, 211, 153, 0.3)',
-                                color: '#6ee7b7',
+                                color: '#10b981',
                                 borderRadius: '8px',
                                 padding: '6px 10px',
                                 fontSize: '0.72rem',
@@ -393,13 +436,13 @@ export default function MobilePocket() {
           }}>
             <Sparkles size={32} color="#fff" />
           </div>
-          <h2 style={{ fontSize: '1.25rem', fontWeight: 800, margin: '0 0 0.5rem 0' }}>Consultor FiscalZap</h2>
+          <h2 style={{ fontSize: '1.25rem', fontWeight: 800, margin: '0 0 0.5rem 0', color: 'var(--text-primary)' }}>Consultor FiscalZap</h2>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', maxWidth: '300px', lineHeight: 1.5, margin: 0 }}>
             Tire dúvidas sobre seus prazos fiscais, fluxo de caixa e simulação de impostos.
           </p>
           <div style={{
             marginTop: '1.5rem', padding: '0.75rem 1rem', borderRadius: '12px',
-            background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
+            background: 'var(--bg-secondary)', border: '1px solid var(--border-color)',
             fontSize: '0.8rem', color: 'var(--text-secondary)'
           }}>
             🚀 Em desenvolvimento para a Fase 3
@@ -416,9 +459,9 @@ export default function MobilePocket() {
         maxWidth: '480px',
         margin: '0 auto',
         height: '68px',
-        background: 'rgba(15, 17, 23, 0.95)',
+        background: 'var(--bg-primary)',
         backdropFilter: 'blur(16px)',
-        borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+        borderTop: '1px solid var(--border-color)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-around',
