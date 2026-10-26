@@ -3,12 +3,15 @@ import { useAuth } from '../components/AuthProvider';
 import { supabase } from '../lib/supabase';
 import { 
   Mic, UploadCloud, Copy, Check, ExternalLink, Calendar as CalendarIcon, 
-  MessageSquare, Briefcase, User, ChevronRight, AlertCircle, Sparkles, Monitor, Sun, Moon
+  MessageSquare, Briefcase, User, ChevronRight, AlertCircle, Sparkles, Monitor, Sun, Moon, Square
 } from 'lucide-react';
 import { format, isAfter, isToday, parseISO, addDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
 import BoletoImportModal from '../components/BoletoImportModal';
+import VoiceConfirmModal from '../components/VoiceConfirmModal';
+import { useSpeechRecognition } from '../hooks/useSpeechRecognition';
+import { parseVoiceExpense } from '../utils/voiceParser';
 
 export default function MobilePocket() {
   const { user } = useAuth();
@@ -24,9 +27,20 @@ export default function MobilePocket() {
   const [isBoletoModalOpen, setIsBoletoModalOpen] = useState(false);
   const [isLightMode, setIsLightMode] = useState(false);
 
-  // Estado do botão de voz (preparado para Fase 2)
-  const [isListening, setIsListening] = useState(false);
-  const [voiceFeedback, setVoiceFeedback] = useState('');
+  // Estados do fluxo de voz
+  const [parsedVoiceData, setParsedVoiceData] = useState(null);
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+
+  // Hook nativo da Web Speech API (HTML5)
+  const { 
+    isListening, 
+    transcript, 
+    error: speechError, 
+    isSupported, 
+    startListening, 
+    stopListening,
+    setTranscript 
+  } = useSpeechRecognition();
 
   useEffect(() => {
     // Sincroniza tema salvo no localStorage
@@ -52,6 +66,17 @@ export default function MobilePocket() {
   useEffect(() => {
     fetchData();
   }, [currentContext]);
+
+  // Quando o usuário termina de falar e há transcrição, aciona o parser
+  useEffect(() => {
+    if (!isListening && transcript && transcript.trim().length > 3) {
+      const result = parseVoiceExpense(transcript, categories);
+      if (result) {
+        setParsedVoiceData(result);
+        setIsConfirmModalOpen(true);
+      }
+    }
+  }, [isListening, transcript]);
 
   const fetchData = async () => {
     if (!user) return;
@@ -92,15 +117,12 @@ export default function MobilePocket() {
     setTimeout(() => setCopiedId(null), 2000);
   };
 
-  const handleVoiceButtonClick = () => {
-    setIsListening(!isListening);
-    if (!isListening) {
-      setVoiceFeedback('Ouvindo... Dite seu compromisso (ex: "Pagar aluguel 1500 dia 10")');
-      setTimeout(() => {
-        setVoiceFeedback('Fase 2: Conectando motor Web Speech API...');
-      }, 2500);
+  const handleVoiceToggle = () => {
+    if (isListening) {
+      stopListening();
     } else {
-      setVoiceFeedback('');
+      setTranscript('');
+      startListening();
     }
   };
 
@@ -241,14 +263,14 @@ export default function MobilePocket() {
               {/* Efeito de onda pulsante se estiver gravando */}
               {isListening && (
                 <div style={{
-                  position: 'absolute', top: '-10px', left: '-10px', right: '-10px', bottom: '-10px',
-                  borderRadius: '50%', background: 'rgba(239, 68, 68, 0.3)',
-                  animation: 'pulse 1.5s infinite ease-in-out'
+                  position: 'absolute', top: '-12px', left: '-12px', right: '-12px', bottom: '-12px',
+                  borderRadius: '50%', background: 'rgba(239, 68, 68, 0.35)',
+                  animation: 'pulse 1.2s infinite ease-in-out'
                 }} />
               )}
               
               <button
-                onClick={handleVoiceButtonClick}
+                onClick={handleVoiceToggle}
                 style={{
                   width: '96px',
                   height: '96px',
@@ -270,22 +292,36 @@ export default function MobilePocket() {
                   zIndex: 2
                 }}
               >
-                <Mic size={40} strokeWidth={2.2} />
+                {isListening ? <Square size={34} fill="#fff" /> : <Mic size={40} strokeWidth={2.2} />}
               </button>
             </div>
 
-            <span style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--text-primary)', marginTop: '1rem', letterSpacing: '-0.01em' }}>
-              {isListening ? 'Gravando sua voz...' : 'Ditar Compromisso'}
+            <span style={{ fontSize: '1rem', fontWeight: 800, color: isListening ? '#ef4444' : 'var(--text-primary)', marginTop: '1rem', letterSpacing: '-0.01em' }}>
+              {isListening ? 'Ouvindo... Toque para finalizar' : 'Ditar Compromisso'}
             </span>
-            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textAlign: 'center', marginTop: '4px', maxWidth: '280px' }}>
-              {voiceFeedback || 'Toque para falar: data, valor e fornecedor serão lançados sozinhos.'}
-            </span>
+
+            {/* Transcrição em tempo real ou feedback */}
+            <div style={{ minHeight: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: '4px' }}>
+              {transcript ? (
+                <span style={{ fontSize: '0.85rem', color: 'var(--accent-primary)', fontWeight: 600, textAlign: 'center', maxWidth: '320px', fontStyle: 'italic' }}>
+                  "{transcript}"
+                </span>
+              ) : speechError ? (
+                <span style={{ fontSize: '0.75rem', color: '#ef4444', textAlign: 'center', maxWidth: '280px' }}>
+                  {speechError}
+                </span>
+              ) : (
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textAlign: 'center', maxWidth: '280px' }}>
+                  Fale algo como: "Pagar aluguel 1500 dia 10" ou "Copel 280 amanhã"
+                </span>
+              )}
+            </div>
 
             {/* Botão Secundário: Anexar Boleto / PDF */}
             <button
               onClick={() => setIsBoletoModalOpen(true)}
               style={{
-                marginTop: '1.25rem',
+                marginTop: '1rem',
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '8px',
@@ -495,7 +531,17 @@ export default function MobilePocket() {
         </button>
       </nav>
 
-      {/* Modal de Importação de Boleto reutilizado */}
+      {/* Modal de Confirmação de Voz (Fase 2) */}
+      <VoiceConfirmModal
+        isOpen={isConfirmModalOpen}
+        onClose={() => setIsConfirmModalOpen(false)}
+        parsedData={parsedVoiceData}
+        categories={categories}
+        user={user}
+        onSuccess={fetchData}
+      />
+
+      {/* Modal de Importação de Boleto */}
       <BoletoImportModal
         isOpen={isBoletoModalOpen}
         onClose={() => setIsBoletoModalOpen(false)}
