@@ -97,18 +97,18 @@ export default function BillModal({ isOpen, onClose, selectedDate, user, categor
   return (
     <div style={{
       position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-      backgroundColor: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)',
+      backgroundColor: 'var(--modal-overlay)', backdropFilter: 'blur(8px)',
       display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000,
       padding: '1rem'
     }}>
       <div style={{ 
         width: '100%', maxWidth: '520px', 
-        background: '#111116',
-        border: '1px solid rgba(129, 140, 248, 0.2)',
+        background: 'var(--modal-bg)',
+        border: '1px solid var(--border-color)',
         borderRadius: '24px',
         padding: '2rem',
         position: 'relative',
-        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 0 40px rgba(99, 102, 241, 0.1)',
+        boxShadow: 'var(--shadow-lg)',
         display: 'flex',
         flexDirection: 'column',
         maxHeight: '92vh'
@@ -117,14 +117,12 @@ export default function BillModal({ isOpen, onClose, selectedDate, user, categor
           onClick={onClose} 
           style={{ 
             position: 'absolute', top: '16px', right: '16px', 
-            background: 'rgba(255,255,255,0.05)', border: 'none', 
+            background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', 
             color: 'var(--text-secondary)', cursor: 'pointer',
             width: '32px', height: '32px', borderRadius: '8px',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             transition: 'all 0.2s'
           }}
-          onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
-          onMouseOut={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
         >
           <X size={16} />
         </button>
@@ -137,7 +135,7 @@ export default function BillModal({ isOpen, onClose, selectedDate, user, categor
             fontSize: '1.75rem', 
             fontWeight: 900, 
             letterSpacing: '-0.02em', 
-            color: '#ffffff',
+            color: 'var(--text-primary)',
             margin: '0.25rem 0 0 0',
             textTransform: 'lowercase'
           }}>
@@ -154,8 +152,8 @@ export default function BillModal({ isOpen, onClose, selectedDate, user, categor
           ) : (
             dayBills.map(bill => (
               <div key={bill.id} style={{ 
-                background: 'rgba(255,255,255,0.03)',
-                border: '1px solid rgba(255,255,255,0.08)',
+                background: 'var(--item-bg)',
+                border: '1px solid var(--item-border)',
                 borderRadius: '14px',
                 padding: '0.9rem 1rem',
                 display: 'flex',
@@ -164,7 +162,7 @@ export default function BillModal({ isOpen, onClose, selectedDate, user, categor
               }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <div>
-                    <div style={{ fontWeight: 600, color: '#f8fafc', fontSize: '0.95rem' }}>{bill.description}</div>
+                    <div style={{ fontWeight: 600, color: 'var(--text-primary)', fontSize: '0.95rem' }}>{bill.description}</div>
                     <div style={{ color: '#fb7185', fontWeight: 700, marginTop: '2px', fontSize: '1.15rem' }}>
                       R$ {bill.amount.toFixed(2).replace('.', ',')}
                     </div>
@@ -188,7 +186,7 @@ export default function BillModal({ isOpen, onClose, selectedDate, user, categor
 
                 {/* Ações Rápidas: Copiar Linha Digitável e Ver Boleto */}
                 {(bill.barcode || bill.file_url) && (
-                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', paddingTop: '4px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', paddingTop: '4px', borderTop: '1px solid var(--border-color)' }}>
                     {bill.barcode && (
                       <button
                         type="button"
@@ -196,7 +194,7 @@ export default function BillModal({ isOpen, onClose, selectedDate, user, categor
                         style={{
                           background: 'rgba(99, 102, 241, 0.15)',
                           border: '1px solid rgba(99, 102, 241, 0.3)',
-                          color: '#a5b4fc',
+                          color: 'var(--accent-primary)',
                           borderRadius: '8px',
                           padding: '4px 10px',
                           fontSize: '0.75rem',
@@ -207,7 +205,7 @@ export default function BillModal({ isOpen, onClose, selectedDate, user, categor
                           gap: '5px'
                         }}
                       >
-                        {copiedId === bill.id ? <Check size={13} color="#34d399" /> : <Copy size={13} />}
+                        {copiedId === bill.id ? <Check size={13} color="#10b981" /> : <Copy size={13} />}
                         {copiedId === bill.id ? 'Código Copiado!' : 'Copiar Código de Barras'}
                       </button>
                     )}
@@ -218,9 +216,9 @@ export default function BillModal({ isOpen, onClose, selectedDate, user, categor
                         target="_blank"
                         rel="noopener noreferrer"
                         style={{
-                          background: 'rgba(52, 211, 153, 0.12)',
-                          border: '1px solid rgba(52, 211, 153, 0.3)',
-                          color: '#6ee7b7',
+                          background: 'rgba(16, 185, 129, 0.12)',
+                          border: '1px solid rgba(16, 185, 129, 0.3)',
+                          color: '#059669',
                           borderRadius: '8px',
                           padding: '4px 10px',
                           fontSize: '0.75rem',
@@ -243,8 +241,8 @@ export default function BillModal({ isOpen, onClose, selectedDate, user, categor
 
           {dayBills.length > 0 && (
             <div style={{ 
-              background: 'rgba(99, 102, 241, 0.1)',
-              border: '1px solid rgba(99, 102, 241, 0.3)',
+              background: 'rgba(99, 102, 241, 0.08)',
+              border: '1px solid rgba(99, 102, 241, 0.25)',
               borderRadius: '12px',
               padding: '0.8rem 1rem',
               display: 'flex',
@@ -260,7 +258,7 @@ export default function BillModal({ isOpen, onClose, selectedDate, user, categor
         </div>
 
         {/* Adicionar Conta Manual */}
-        <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '1.25rem' }}>
+        <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '1.25rem' }}>
           <span style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--accent-primary)', textTransform: 'uppercase', marginBottom: '0.75rem' }}>
             Adicionar Conta Neste Dia
           </span>
@@ -271,8 +269,8 @@ export default function BillModal({ isOpen, onClose, selectedDate, user, categor
               placeholder="Nome (ex: Aluguel, Energia...)"
               value={description} onChange={e => setDescription(e.target.value)}
               style={{
-                background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
-                padding: '0.75rem 1rem', borderRadius: '12px', color: '#fff', fontSize: '0.9rem',
+                background: 'var(--input-bg)', border: '1px solid var(--input-border)',
+                padding: '0.75rem 1rem', borderRadius: '12px', color: 'var(--text-primary)', fontSize: '0.9rem',
                 outline: 'none', width: '100%'
               }}
             />
@@ -281,14 +279,14 @@ export default function BillModal({ isOpen, onClose, selectedDate, user, categor
               <select 
                 value={categoryId} onChange={e => setCategoryId(e.target.value)} required
                 style={{
-                  background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
-                  padding: '0.75rem 1rem', borderRadius: '12px', color: '#fff', fontSize: '0.9rem',
+                  background: 'var(--input-bg)', border: '1px solid var(--input-border)',
+                  padding: '0.75rem 1rem', borderRadius: '12px', color: 'var(--text-primary)', fontSize: '0.9rem',
                   outline: 'none', flex: 1, cursor: 'pointer'
                 }}
               >
-                <option value="" style={{ background: '#111116' }}>Categoria</option>
+                <option value="" style={{ background: 'var(--modal-bg)', color: 'var(--text-primary)' }}>Categoria</option>
                 {categories.map(c => (
-                  <option key={c.id} value={c.id} style={{ background: '#111116' }}>{c.name}</option>
+                  <option key={c.id} value={c.id} style={{ background: 'var(--modal-bg)', color: 'var(--text-primary)' }}>{c.name}</option>
                 ))}
               </select>
 
@@ -297,8 +295,8 @@ export default function BillModal({ isOpen, onClose, selectedDate, user, categor
                 placeholder="Valor (R$)"
                 value={amount} onChange={e => setAmount(e.target.value)}
                 style={{
-                  background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
-                  padding: '0.75rem 1rem', borderRadius: '12px', color: '#fff', fontSize: '0.9rem',
+                  background: 'var(--input-bg)', border: '1px solid var(--input-border)',
+                  padding: '0.75rem 1rem', borderRadius: '12px', color: 'var(--text-primary)', fontSize: '0.9rem',
                   outline: 'none', width: '120px'
                 }}
               />
@@ -311,15 +309,15 @@ export default function BillModal({ isOpen, onClose, selectedDate, user, categor
                 placeholder="Código de barras (opcional)"
                 value={barcode} onChange={e => setBarcode(e.target.value)}
                 style={{
-                  background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)',
-                  padding: '0.6rem 0.8rem', borderRadius: '10px', color: '#fff', fontSize: '0.8rem',
+                  background: 'var(--input-bg)', border: '1px solid var(--input-border)',
+                  padding: '0.6rem 0.8rem', borderRadius: '10px', color: 'var(--text-primary)', fontSize: '0.8rem',
                   outline: 'none', flex: 1, fontFamily: 'monospace'
                 }}
               />
 
               <label style={{
-                background: file ? 'rgba(99, 102, 241, 0.2)' : 'rgba(255,255,255,0.05)',
-                border: '1px solid rgba(255,255,255,0.1)',
+                background: file ? 'rgba(99, 102, 241, 0.15)' : 'var(--input-bg)',
+                border: '1px solid var(--input-border)',
                 color: file ? 'var(--accent-primary)' : 'var(--text-secondary)',
                 padding: '0.6rem 0.8rem',
                 borderRadius: '10px',

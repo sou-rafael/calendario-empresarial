@@ -149,18 +149,18 @@ export default function BoletoImportModal({ isOpen, onClose, user, categories, o
   return (
     <div style={{
       position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-      backgroundColor: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)',
+      backgroundColor: 'var(--modal-overlay)', backdropFilter: 'blur(10px)',
       display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1100,
       padding: '1rem'
     }}>
       <div style={{
         width: '100%', maxWidth: '540px',
-        background: '#111116',
-        border: '1px solid rgba(129, 140, 248, 0.25)',
+        background: 'var(--modal-bg)',
+        border: '1px solid var(--border-color)',
         borderRadius: '24px',
         padding: '2rem',
         position: 'relative',
-        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.8), 0 0 40px rgba(99, 102, 241, 0.15)',
+        boxShadow: 'var(--shadow-lg)',
         display: 'flex',
         flexDirection: 'column',
         maxHeight: '92vh',
@@ -171,14 +171,14 @@ export default function BoletoImportModal({ isOpen, onClose, user, categories, o
           onClick={onClose}
           style={{
             position: 'absolute', top: '18px', right: '18px',
-            background: 'rgba(255,255,255,0.05)', border: 'none',
+            background: 'var(--bg-secondary)', border: '1px solid var(--border-color)',
             color: 'var(--text-secondary)', cursor: 'pointer',
             width: '32px', height: '32px', borderRadius: '8px',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             transition: 'all 0.2s'
           }}
-          onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
-          onMouseOut={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+          onMouseOver={(e) => e.currentTarget.style.background = 'var(--item-hover-bg)'}
+          onMouseOut={(e) => e.currentTarget.style.background = 'var(--bg-secondary)'}
         >
           <X size={16} />
         </button>
@@ -188,7 +188,7 @@ export default function BoletoImportModal({ isOpen, onClose, user, categories, o
           <span style={{ fontSize: '0.75rem', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--accent-primary)', textTransform: 'uppercase' }}>
             Automação de Boletos
           </span>
-          <h2 style={{ fontSize: '1.6rem', fontWeight: 800, color: '#ffffff', margin: '0.2rem 0 0.5rem 0' }}>
+          <h2 style={{ fontSize: '1.6rem', fontWeight: 800, color: 'var(--text-primary)', margin: '0.2rem 0 0.5rem 0' }}>
             Importação Rápida
           </h2>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', margin: 0 }}>
@@ -199,11 +199,11 @@ export default function BoletoImportModal({ isOpen, onClose, user, categories, o
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
           {/* Upload do Arquivo / PDF */}
           <div style={{
-            border: isReadingPdf ? '2px dashed var(--accent-primary)' : '2px dashed rgba(129, 140, 248, 0.3)',
+            border: isReadingPdf ? '2px dashed var(--accent-primary)' : '2px dashed var(--border-color)',
             borderRadius: '16px',
             padding: '1.25rem',
             textAlign: 'center',
-            backgroundColor: file ? 'rgba(99, 102, 241, 0.08)' : 'rgba(255,255,255,0.02)',
+            backgroundColor: file ? 'rgba(99, 102, 241, 0.08)' : 'var(--input-bg)',
             transition: 'all 0.2s'
           }}>
             <input
@@ -229,7 +229,7 @@ export default function BoletoImportModal({ isOpen, onClose, user, categories, o
                 </div>
               ) : file ? (
                 <div>
-                  <div style={{ color: '#fff', fontWeight: 600, fontSize: '0.95rem' }}>{file.name}</div>
+                  <div style={{ color: 'var(--text-primary)', fontWeight: 600, fontSize: '0.95rem' }}>{file.name}</div>
                   <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem', marginTop: '2px' }}>
                     {(file.size / 1024 / 1024).toFixed(2)} MB • Clique para trocar de arquivo
                   </div>
@@ -252,7 +252,7 @@ export default function BoletoImportModal({ isOpen, onClose, user, categories, o
                 Linha Digitável / Código de Barras
               </label>
               {parsedInfo && (
-                <span style={{ fontSize: '0.75rem', color: '#34d399', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <span style={{ fontSize: '0.75rem', color: '#10b981', display: 'flex', alignItems: 'center', gap: '4px' }}>
                   <CheckCircle2 size={13} /> {parsedInfo.type === 'BANCARIO' ? 'Boleto Bancário Lido' : 'Concessionária Lida'}
                 </span>
               )}
@@ -265,11 +265,11 @@ export default function BoletoImportModal({ isOpen, onClose, user, categories, o
                 onChange={(e) => handleBarcodeChange(e.target.value)}
                 style={{
                   width: '100%',
-                  background: 'rgba(255,255,255,0.05)',
-                  border: parsedInfo ? '1px solid #34d399' : '1px solid rgba(255,255,255,0.1)',
+                  background: 'var(--input-bg)',
+                  border: parsedInfo ? '1px solid #10b981' : '1px solid var(--input-border)',
                   borderRadius: '12px',
                   padding: '0.8rem 2.8rem 0.8rem 1rem',
-                  color: '#fff',
+                  color: 'var(--text-primary)',
                   fontSize: '0.875rem',
                   fontFamily: 'monospace',
                   outline: 'none',
@@ -283,7 +283,7 @@ export default function BoletoImportModal({ isOpen, onClose, user, categories, o
                   title="Copiar código limpo"
                   style={{
                     position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)',
-                    background: 'transparent', border: 'none', color: copied ? '#34d399' : 'var(--text-muted)',
+                    background: 'transparent', border: 'none', color: copied ? '#10b981' : 'var(--text-muted)',
                     cursor: 'pointer', padding: '6px'
                   }}
                 >
@@ -311,11 +311,11 @@ export default function BoletoImportModal({ isOpen, onClose, user, categories, o
               onChange={(e) => setDescription(e.target.value)}
               style={{
                 width: '100%',
-                background: 'rgba(255,255,255,0.05)',
-                border: '1px solid rgba(255,255,255,0.1)',
+                background: 'var(--input-bg)',
+                border: '1px solid var(--input-border)',
                 borderRadius: '12px',
                 padding: '0.8rem 1rem',
-                color: '#fff',
+                color: 'var(--text-primary)',
                 fontSize: '0.95rem',
                 outline: 'none'
               }}
@@ -326,7 +326,7 @@ export default function BoletoImportModal({ isOpen, onClose, user, categories, o
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
             <div>
               <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: '6px' }}>
-                Vencimento * {parsedInfo?.dueDate && <span style={{ color: '#34d399' }}>(extraído)</span>}
+                Vencimento * {parsedInfo?.dueDate && <span style={{ color: '#10b981' }}>(extraído)</span>}
               </label>
               <input
                 type="date"
@@ -335,11 +335,11 @@ export default function BoletoImportModal({ isOpen, onClose, user, categories, o
                 onChange={(e) => setDueDate(e.target.value)}
                 style={{
                   width: '100%',
-                  background: 'rgba(255,255,255,0.05)',
-                  border: parsedInfo?.dueDate ? '1px solid #34d399' : '1px solid rgba(255,255,255,0.1)',
+                  background: 'var(--input-bg)',
+                  border: parsedInfo?.dueDate ? '1px solid #10b981' : '1px solid var(--input-border)',
                   borderRadius: '12px',
                   padding: '0.8rem 1rem',
-                  color: '#fff',
+                  color: 'var(--text-primary)',
                   fontSize: '0.9rem',
                   outline: 'none'
                 }}
@@ -348,7 +348,7 @@ export default function BoletoImportModal({ isOpen, onClose, user, categories, o
 
             <div>
               <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: '6px' }}>
-                Valor (R$) * {parsedInfo?.amount && <span style={{ color: '#34d399' }}>(extraído)</span>}
+                Valor (R$) * {parsedInfo?.amount && <span style={{ color: '#10b981' }}>(extraído)</span>}
               </label>
               <input
                 type="number"
@@ -359,11 +359,11 @@ export default function BoletoImportModal({ isOpen, onClose, user, categories, o
                 onChange={(e) => setAmount(e.target.value)}
                 style={{
                   width: '100%',
-                  background: 'rgba(255,255,255,0.05)',
-                  border: parsedInfo?.amount ? '1px solid #34d399' : '1px solid rgba(255,255,255,0.1)',
+                  background: 'var(--input-bg)',
+                  border: parsedInfo?.amount ? '1px solid #10b981' : '1px solid var(--input-border)',
                   borderRadius: '12px',
                   padding: '0.8rem 1rem',
-                  color: '#fff',
+                  color: 'var(--text-primary)',
                   fontSize: '0.95rem',
                   outline: 'none'
                 }}
@@ -382,19 +382,19 @@ export default function BoletoImportModal({ isOpen, onClose, user, categories, o
               required
               style={{
                 width: '100%',
-                background: 'rgba(255,255,255,0.05)',
-                border: '1px solid rgba(255,255,255,0.1)',
+                background: 'var(--input-bg)',
+                border: '1px solid var(--input-border)',
                 borderRadius: '12px',
                 padding: '0.8rem 1rem',
-                color: '#fff',
+                color: 'var(--text-primary)',
                 fontSize: '0.95rem',
                 outline: 'none',
                 cursor: 'pointer'
               }}
             >
-              <option value="" style={{ background: '#111116' }}>Selecione uma categoria...</option>
+              <option value="" style={{ background: 'var(--modal-bg)', color: 'var(--text-primary)' }}>Selecione uma categoria...</option>
               {categories.map((c) => (
-                <option key={c.id} value={c.id} style={{ background: '#111116' }}>{c.name}</option>
+                <option key={c.id} value={c.id} style={{ background: 'var(--modal-bg)', color: 'var(--text-primary)' }}>{c.name}</option>
               ))}
             </select>
           </div>

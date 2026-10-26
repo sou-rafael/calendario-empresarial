@@ -42,18 +42,36 @@ export default function CategoryModal({ isOpen, onClose, user, categories, onCat
   return (
     <div style={{
       position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-      backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000
+      backgroundColor: 'var(--modal-overlay)', backdropFilter: 'blur(8px)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000,
+      padding: '1rem'
     }}>
-      <div className="glass-panel" style={{ width: '100%', maxWidth: '400px', padding: '2rem', position: 'relative' }}>
+      <div style={{ 
+        width: '100%', maxWidth: '420px', 
+        padding: '2rem', 
+        position: 'relative',
+        background: 'var(--modal-bg)',
+        border: '1px solid var(--border-color)',
+        borderRadius: '24px',
+        boxShadow: 'var(--shadow-lg)'
+      }}>
         <button 
           onClick={onClose} 
-          style={{ position: 'absolute', top: '16px', right: '16px', background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer' }}
+          style={{ 
+            position: 'absolute', top: '16px', right: '16px', 
+            background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', 
+            color: 'var(--text-secondary)', cursor: 'pointer',
+            width: '32px', height: '32px', borderRadius: '8px',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            transition: 'all 0.2s'
+          }}
         >
-          <X size={20} />
+          <X size={16} />
         </button>
         
-        <h3 style={{ marginBottom: '1.5rem' }}>Gerenciar Categorias</h3>
+        <h3 style={{ marginBottom: '1.5rem', color: 'var(--text-primary)', fontWeight: 800, fontSize: '1.35rem' }}>
+          Gerenciar Categorias
+        </h3>
 
         <form onSubmit={handleAddCategory} style={{ display: 'flex', gap: '8px', marginBottom: '2rem' }}>
           <input 

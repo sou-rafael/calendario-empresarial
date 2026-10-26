@@ -34,6 +34,10 @@
   --item-bg: rgba(255, 255, 255, 0.03);
   --item-border: rgba(255, 255, 255, 0.08);
   --item-hover-bg: rgba(255, 255, 255, 0.05);
+
+  /* Modal Surface */
+  --modal-bg: #12151d;
+  --modal-overlay: rgba(0, 0, 0, 0.75);
   
   /* Calendário Interno (Sólido) */
   --calendar-bg: #000000;
@@ -80,6 +84,10 @@ body.light-mode {
   --item-bg: #ffffff;
   --item-border: #f1f5f9; /* divide-slate-100 */
   --item-hover-bg: rgba(248, 250, 252, 0.8); /* hover:bg-slate-50/80 */
+
+  /* Modal Surface */
+  --modal-bg: #ffffff;
+  --modal-overlay: rgba(15, 23, 42, 0.45);
   
   /* Calendário Interno */
   --calendar-bg: #ffffff;
@@ -167,8 +175,13 @@ p {
 }
 
 select option {
-  background-color: var(--bg-secondary);
+  background-color: var(--modal-bg);
   color: var(--text-primary);
+}
+
+body.light-mode select option {
+  background-color: #ffffff;
+  color: #0f172a;
 }
 
 /* Botões */

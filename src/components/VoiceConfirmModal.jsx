@@ -47,14 +47,14 @@ export default function VoiceConfirmModal({ isOpen, onClose, parsedData, categor
   return (
     <div style={{
       position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-      backgroundColor: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(12px)',
+      backgroundColor: 'var(--modal-overlay)', backdropFilter: 'blur(12px)',
       display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1200,
       padding: '1rem'
     }}>
       <div style={{
         width: '100%', maxWidth: '440px',
-        background: 'var(--bg-primary)',
-        border: '1px solid var(--border-focus)',
+        background: 'var(--modal-bg)',
+        border: '1px solid var(--border-color)',
         borderRadius: '24px',
         padding: '1.75rem',
         position: 'relative',
@@ -69,7 +69,7 @@ export default function VoiceConfirmModal({ isOpen, onClose, parsedData, categor
           onClick={onClose}
           style={{
             position: 'absolute', top: '16px', right: '16px',
-            background: 'var(--bg-secondary)', border: 'none',
+            background: 'var(--bg-secondary)', border: '1px solid var(--border-color)',
             color: 'var(--text-secondary)', cursor: 'pointer',
             width: '32px', height: '32px', borderRadius: '8px',
             display: 'flex', alignItems: 'center', justifyContent: 'center'
@@ -187,9 +187,9 @@ export default function VoiceConfirmModal({ isOpen, onClose, parsedData, categor
                 cursor: 'pointer'
               }}
             >
-              <option value="">Selecione uma categoria...</option>
+              <option value="" style={{ background: 'var(--modal-bg)', color: 'var(--text-primary)' }}>Selecione uma categoria...</option>
               {categories.map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
+                <option key={c.id} value={c.id} style={{ background: 'var(--modal-bg)', color: 'var(--text-primary)' }}>{c.name}</option>
               ))}
             </select>
           </div>
