@@ -51,6 +51,13 @@ export default function MobilePocket() {
     return () => clearInterval(timer);
   }, []);
 
+  // Hook de Notificações Web Push (Fase 4)
+  const { 
+    permission: pushPermission, 
+    requestPermission: requestPushPermission, 
+    checkAndNotifyTodayBills 
+  } = useWebPush(user, bills);
+
   // Hook nativo da Web Speech API (HTML5)
   const { 
     isListening, 
