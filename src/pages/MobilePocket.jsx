@@ -10,6 +10,7 @@ import { ptBR } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
 import BoletoImportModal from '../components/BoletoImportModal';
 import VoiceConfirmModal from '../components/VoiceConfirmModal';
+import MobileChatView from '../components/MobileChatView';
 import { useSpeechRecognition } from '../hooks/useSpeechRecognition';
 import { parseVoiceExpense } from '../utils/voiceParser';
 
@@ -503,29 +504,9 @@ export default function MobilePocket() {
         </main>
       )}
 
-      {/* Conteúdo da Aba CHAT (Assistente IA) */}
+      {/* Conteúdo da Aba CHAT (Consultor Fiscal Empresarial) */}
       {currentTab === 'chat' && (
-        <main style={{ padding: '1rem', display: 'flex', flexDirection: 'column', flex: 1, justifyContent: 'center', alignItems: 'center', textAlign: 'center' }}>
-          <div style={{
-            width: '64px', height: '64px', borderRadius: '20px',
-            background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            marginBottom: '1rem', boxShadow: '0 8px 25px rgba(168, 85, 247, 0.35)'
-          }}>
-            <Sparkles size={32} color="#fff" />
-          </div>
-          <h2 style={{ fontSize: '1.25rem', fontWeight: 800, margin: '0 0 0.5rem 0', color: 'var(--text-primary)' }}>Consultor FiscalZap</h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', maxWidth: '300px', lineHeight: 1.5, margin: 0 }}>
-            Tire dúvidas sobre seus prazos fiscais, fluxo de caixa e simulação de impostos.
-          </p>
-          <div style={{
-            marginTop: '1.5rem', padding: '0.75rem 1rem', borderRadius: '12px',
-            background: 'var(--bg-secondary)', border: '1px solid var(--border-color)',
-            fontSize: '0.8rem', color: 'var(--text-secondary)'
-          }}>
-            🚀 Em desenvolvimento para a Fase 3
-          </div>
-        </main>
+        <MobileChatView bills={bills} categories={categories} />
       )}
 
       {/* 4. BOTTOM NAVIGATION BAR (Navegação de Bolso Fixa) */}
