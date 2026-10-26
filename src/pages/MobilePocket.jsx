@@ -24,6 +24,8 @@ export default function MobilePocket() {
   const [currentContext, setCurrentContext] = useState('empresarial');
   const [bills, setBills] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [empresaBills, setEmpresaBills] = useState([]);
+  const [empresaCategories, setEmpresaCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [copiedId, setCopiedId] = useState(null);
   const [isBoletoModalOpen, setIsBoletoModalOpen] = useState(false);
