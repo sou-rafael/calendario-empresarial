@@ -12,11 +12,15 @@ export const AuthProvider = ({ children }) => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
       setLoading(false);
+    }).catch((err) => {
+      console.error('Erro ao buscar sessão:', err);
+      setLoading(false);
     });
 
     // Escuta por mudanças de autenticação (login, logout, etc)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
+      setLoading(false);
     });
 
     return () => subscription.unsubscribe();
@@ -24,7 +28,22 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider value={{ user, loading }}>
-      {!loading && children}
+      {loading ? (
+        <div style={{
+          minHeight: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: '#09090b',
+          color: '#818cf8',
+          fontFamily: 'sans-serif',
+          fontSize: '0.9rem'
+        }}>
+          Carregando FiscalZap...
+        </div>
+      ) : (
+        children
+      )}
     </AuthContext.Provider>
   );
 };
