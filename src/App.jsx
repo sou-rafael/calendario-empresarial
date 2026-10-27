@@ -10,13 +10,15 @@ import ListView from './pages/ListView';
 import DreView from './pages/DreView';
 import DashboardView from './pages/DashboardView';
 import MobilePocket from './pages/MobilePocket';
+import LandingPage from './pages/LandingPage';
 
 function MobileAutoRedirect({ children }) {
   const location = useLocation();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (location.pathname === '/mobile' || location.pathname === '/login') {
+    // Não redireciona se já estiver no mobile, na tela de login ou na landing page
+    if (location.pathname === '/mobile' || location.pathname === '/login' || location.pathname === '/landing') {
       return;
     }
 
@@ -37,12 +39,20 @@ function MobileAutoRedirect({ children }) {
 }
 
 function App() {
+  // Detecta se o visitante está acessando o domínio principal (ex: kdconta.com.br / www.kdconta.com.br)
+  // Se estiver em app.kdconta.com.br ou localhost, exibe o aplicativo direto.
+  const hostname = typeof window !== 'undefined' ? window.location.hostname : '';
+  const isMarketingDomain = hostname === 'kdconta.com.br' || hostname === 'www.kdconta.com.br';
+
   return (
     <ErrorBoundary>
       <AuthProvider>
         <BrowserRouter>
           <MobileAutoRedirect>
             <Routes>
+              {/* Rota dedicada da Landing Page (acessível via /landing em qualquer ambiente) */}
+              <Route path="/landing" element={<LandingPage />} />
+
               <Route path="/login" element={<Login />} />
               
               {/* Rota PWA Pocket Mobile */}
@@ -55,13 +65,17 @@ function App() {
                 } 
               />
 
-              {/* Rota Web Desktop Completa */}
+              {/* Rota Web Desktop Completa (ou Landing Page se estiver no domínio raiz de vendas) */}
               <Route 
                 path="/" 
                 element={
-                  <ProtectedRoute>
-                    <Layout />
-                  </ProtectedRoute>
+                  isMarketingDomain ? (
+                    <LandingPage />
+                  ) : (
+                    <ProtectedRoute>
+                      <Layout />
+                    </ProtectedRoute>
+                  )
                 } 
               >
                 <Route index element={<CalendarView />} />
@@ -70,7 +84,7 @@ function App() {
                 <Route path="dashboard" element={<DashboardView />} />
               </Route>
 
-              <Route path="*" element={<Navigate to="/" replace />} />
+              <Route path="*" element={<Navigate to={isMarketingDomain ? "/landing" : "/"} replace />} />
             </Routes>
           </MobileAutoRedirect>
         </BrowserRouter>
