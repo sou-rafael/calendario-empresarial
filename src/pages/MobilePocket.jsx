@@ -230,7 +230,7 @@ export default function MobilePocket() {
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <img 
             src="/favicon.svg" 
-            alt="FiscalZap" 
+            alt="KdConta" 
             style={{
               width: '32px',
               height: '32px',
@@ -240,9 +240,9 @@ export default function MobilePocket() {
             }} 
           />
           <div>
-            <h1 style={{ fontSize: '0.95rem', fontWeight: 800, margin: 0, letterSpacing: '-0.02em', color: 'var(--text-primary)' }}>FiscalZap</h1>
+            <h1 style={{ fontSize: '0.95rem', fontWeight: 800, margin: 0, letterSpacing: '-0.02em', color: 'var(--text-primary)' }}>KdConta</h1>
             <span style={{ fontSize: '0.62rem', color: 'var(--accent-primary)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              Pocket Mobile
+              Cadê a conta?
             </span>
           </div>
         </div>

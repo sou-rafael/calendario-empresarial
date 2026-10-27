@@ -7,7 +7,7 @@ export default function MobileChatView({ bills, categories }) {
     {
       id: 'welcome',
       sender: 'bot',
-      text: 'Olá! Sou o seu **Consultor FiscalZap**.\nEstou configurado exclusivamente para analisar as finanças da sua **Empresa**.\n\nEscolha um dos temas abaixo para eu consultar seus dados em tempo real:',
+      text: 'Olá! Sou o seu **Assistente KdConta**.\nEstou configurado exclusivamente para analisar as finanças da sua **Empresa**.\n\nEscolha um dos temas abaixo para eu consultar seus dados em tempo real:',
       time: 'Agora'
     }
   ]);
@@ -171,7 +171,7 @@ export default function MobileChatView({ bills, categories }) {
               {/* Cabeçalho do bot */}
               {msg.sender === 'bot' && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '4px', color: 'var(--accent-primary)', fontWeight: 700, fontSize: '0.72rem' }}>
-                  <Sparkles size={12} /> Consultor FiscalZap
+                  <Sparkles size={12} /> Assistente KdConta
                 </div>
               )}
 

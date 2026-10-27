@@ -1,5 +1,5 @@
-// Service Worker nativo para FiscalZap PWA com suporte a Web Push Notifications
-const CACHE_NAME = 'fiscalzap-v2';
+// Service Worker nativo para KdConta PWA com suporte a Web Push Notifications
+const CACHE_NAME = 'kdconta-v1';
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();
@@ -16,7 +16,7 @@ self.addEventListener('fetch', (event) => {
 // Listener de Web Push do Navegador
 self.addEventListener('push', (event) => {
   let data = {
-    title: '🔔 FiscalZap Alerta',
+    title: '🔔 KdConta Alerta',
     body: 'Você tem contas empresariais vencendo hoje!',
     icon: '/favicon.svg',
     badge: '/favicon.svg',

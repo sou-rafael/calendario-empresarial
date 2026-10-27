@@ -1,7 +1,7 @@
 {
-  "name": "FiscalZap • Calendário Financeiro",
-  "short_name": "FiscalZap",
-  "description": "Gestão financeira visual e ingestão rápida de contas e boletos para empresas.",
+  "name": "KdConta • Cadê a conta?",
+  "short_name": "KdConta",
+  "description": "Cadê a conta? Gestão financeira ágil e descomplicada de contas a pagar.",
   "start_url": "/mobile",
   "scope": "/",
   "display": "standalone",

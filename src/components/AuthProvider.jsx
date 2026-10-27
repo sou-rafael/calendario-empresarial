@@ -39,7 +39,7 @@ export const AuthProvider = ({ children }) => {
           fontFamily: 'sans-serif',
           fontSize: '0.9rem'
         }}>
-          Carregando FiscalZap...
+          Carregando KdConta...
         </div>
       ) : (
         children

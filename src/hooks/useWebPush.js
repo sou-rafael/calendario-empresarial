@@ -34,7 +34,7 @@ export function useWebPush(user, bills = []) {
         // Dispara uma notificação de boas-vindas / teste imediata
         showLocalNotification(
           '🔔 Notificações Ativadas!',
-          'O FiscalZap avisará você automaticamente nas datas de vencimento dos seus boletos.'
+          'O KdConta avisará você automaticamente nas datas de vencimento dos seus boletos.'
         );
 
         // Se houver contas vencendo hoje, já alerta na hora

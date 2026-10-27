@@ -26,7 +26,7 @@ export default function Sidebar({ currentContext, setContext }) {
         <div className="sidebar-header" style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '12px' }}>
           <img 
             src="/favicon.svg" 
-            alt="FiscalZap" 
+            alt="KdConta" 
             style={{
               width: '38px',
               height: '38px',
@@ -37,10 +37,10 @@ export default function Sidebar({ currentContext, setContext }) {
           />
           <div className="brand-text">
             <h2 className="sidebar-title" style={{ fontSize: '1.25rem', fontWeight: 800, margin: 0, letterSpacing: '-0.02em', lineHeight: 1.1 }}>
-              FiscalZap
+              KdConta
             </h2>
             <span style={{ fontSize: '0.65rem', color: 'var(--accent-primary)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginTop: '2px' }}>
-              Gestão Financeira
+              Cadê a conta?
             </span>
           </div>
         </div>
