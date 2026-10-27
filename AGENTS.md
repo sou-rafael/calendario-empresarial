@@ -120,6 +120,10 @@
 * **Landing Page de Captação & Vendas:**
   * Página: [`LandingPage.jsx`](file:///c:/Users/rsf_o/OneDrive/Documentos/PROJETOS_WEB/calendario_empresarial/src/pages/LandingPage.jsx) (rota `/landing` e raiz pública).
   * Inclui alternador de tema Dark/Light sincronizado via `localStorage`, seção de preços "Lote de Membros Fundadores" e carregamento isolado via `React.lazy` (~10 kB gzip).
+* **Painel de Administração Multi-Tenant (Backoffice SaaS Isolado):**
+  * Módulo: [`src/modules/admin/`](file:///c:/Users/rsf_o/OneDrive/Documentos/PROJETOS_WEB/calendario_empresarial/src/modules/admin/AdminPage.jsx) (rota `/admin` ou subdomínio `admin.kdconta.com.br`).
+  * 100% desacoplado e carregado sob demanda via `React.lazy` (~7.7 kB gzip), permitindo fácil extração futura para outro domínio/repositório.
+  * Gerencia clientes (`tenant_profiles`), planos (`trial`, `founder`, `solo`, `pro`, `business`), status (`active`, `trial`, `read_only`, `suspended`), validade do teste de 7 dias e feature flags via funções RPC `SECURITY DEFINER` no PostgreSQL.
 
 ---
 
@@ -151,6 +155,12 @@ calendario_empresarial/
 │   ├── lib/
 │   │   ├── storage.js          # Upload validado, URLs assinadas (60s) e exclusão no bucket 'boletos'
 │   │   └── supabase.js         # Instância inicializada do Supabase Client
+│   ├── modules/
+│   │   └── admin/              # Módulo Backoffice Multi-Tenant 100% isolado (plug-and-play)
+│   │       ├── AdminGuard.jsx      # Guarda de rota exclusiva para system_role === 'super_admin'
+│   │       ├── AdminPage.jsx       # Dashboard de gestão de clientes, MRR, trials e bloqueios
+│   │       ├── AdminTenantModal.jsx # Modal de edição de plano, status, trial e feature flags
+│   │       └── adminService.js     # Cliente RPC para admin_get_tenants_overview e admin_update_tenant_access
 │   ├── pages/
 │   │   ├── CalendarView.jsx    # Calendário financeiro principal
 │   │   ├── DashboardView.jsx   # Dashboard com gráficos Recharts
@@ -169,7 +179,8 @@ calendario_empresarial/
 │   └── main.jsx                # Ponto de montagem React DOM
 ├── supabase/
 │   └── migrations/
-│       └── 20261027000000_security_hardening.sql # Migration oficial de tabelas, índices, RLS e Storage privado
+│       ├── 20261027000000_security_hardening.sql # Migration 001: tabelas, índices, RLS e Storage privado
+│       └── 20261028000000_multi_tenant_admin.sql # Migration 002: tenant_profiles, triggers e RPCs do Backoffice Admin
 ├── AGENTS.md                   # Este documento de referência
 ├── README.md                   # Guia rápido do repositório
 ├── package.json

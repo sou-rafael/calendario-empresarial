@@ -4,7 +4,7 @@ import { AuthProvider } from './components/AuthProvider';
 import ProtectedRoute from './components/ProtectedRoute';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
-// Lazy loading para separar os chunks e acelerar o carregamento inicial (Landing Page & App)
+// Lazy loading para separar os chunks e acelerar o carregamento inicial (Landing Page, App e Backoffice Admin)
 const LandingPage = lazy(() => import('./pages/LandingPage'));
 const Login = lazy(() => import('./pages/Login'));
 const Layout = lazy(() => import('./components/Layout'));
@@ -13,6 +13,10 @@ const ListView = lazy(() => import('./pages/ListView'));
 const DreView = lazy(() => import('./pages/DreView'));
 const DashboardView = lazy(() => import('./pages/DashboardView'));
 const MobilePocket = lazy(() => import('./pages/MobilePocket'));
+
+// Módulo Administrativo Multi-Tenant Isolado (100% desacoplado e carregado apenas sob demanda)
+const AdminGuard = lazy(() => import('./modules/admin/AdminGuard'));
+const AdminPage = lazy(() => import('./modules/admin/AdminPage'));
 
 function PageLoader() {
   return (
@@ -37,8 +41,17 @@ function MobileAutoRedirect({ children }) {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Não redireciona se já estiver no mobile, na tela de login ou na landing page
-    if (location.pathname === '/mobile' || location.pathname === '/login' || location.pathname === '/landing') {
+    const hostname = typeof window !== 'undefined' ? window.location.hostname : '';
+    const isAdminDomain = hostname === 'admin.kdconta.com.br';
+
+    // Não redireciona se já estiver no mobile, login, landing page ou no painel admin
+    if (
+      isAdminDomain ||
+      location.pathname === '/mobile' ||
+      location.pathname === '/login' ||
+      location.pathname === '/landing' ||
+      location.pathname.startsWith('/admin')
+    ) {
       return;
     }
 
@@ -59,10 +72,13 @@ function MobileAutoRedirect({ children }) {
 }
 
 function App() {
-  // Detecta se o visitante está acessando o domínio principal (ex: kdconta.com.br / www.kdconta.com.br)
-  // Se estiver em app.kdconta.com.br ou localhost, exibe o aplicativo direto.
+  // Detecta o subdomínio de acesso:
+  // - kdconta.com.br / www.kdconta.com.br -> Landing Page Pública
+  // - admin.kdconta.com.br -> Backoffice Administrativo Multi-Tenant
+  // - app.kdconta.com.br / localhost -> Aplicação SaaS
   const hostname = typeof window !== 'undefined' ? window.location.hostname : '';
   const isMarketingDomain = hostname === 'kdconta.com.br' || hostname === 'www.kdconta.com.br';
+  const isAdminDomain = hostname === 'admin.kdconta.com.br';
 
   return (
     <ErrorBoundary>
@@ -71,11 +87,21 @@ function App() {
           <MobileAutoRedirect>
             <Suspense fallback={<PageLoader />}>
               <Routes>
-                {/* Rota dedicada da Landing Page (acessível via /landing em qualquer ambiente) */}
+                {/* Rota dedicada da Landing Page */}
                 <Route path="/landing" element={<LandingPage />} />
 
                 <Route path="/login" element={<Login />} />
-                
+
+                {/* Rota dedicada do Módulo de Administração Multi-Tenant */}
+                <Route
+                  path="/admin"
+                  element={
+                    <AdminGuard>
+                      <AdminPage />
+                    </AdminGuard>
+                  }
+                />
+
                 {/* Rota PWA Pocket Mobile */}
                 <Route 
                   path="/mobile" 
@@ -86,12 +112,16 @@ function App() {
                   } 
                 />
 
-                {/* Rota Web Desktop Completa (ou Landing Page se estiver no domínio raiz de vendas) */}
+                {/* Rota Raiz Dinâmica conforme Subdomínio */}
                 <Route 
                   path="/" 
                   element={
                     isMarketingDomain ? (
                       <LandingPage />
+                    ) : isAdminDomain ? (
+                      <AdminGuard>
+                        <AdminPage />
+                      </AdminGuard>
                     ) : (
                       <ProtectedRoute>
                         <Layout />
@@ -105,7 +135,15 @@ function App() {
                   <Route path="dashboard" element={<DashboardView />} />
                 </Route>
 
-                <Route path="*" element={<Navigate to={isMarketingDomain ? "/landing" : "/"} replace />} />
+                <Route
+                  path="*"
+                  element={
+                    <Navigate
+                      to={isMarketingDomain ? "/landing" : isAdminDomain ? "/admin" : "/"}
+                      replace
+                    />
+                  }
+                />
               </Routes>
             </Suspense>
           </MobileAutoRedirect>

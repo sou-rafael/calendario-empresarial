@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase';
 import { openBoletoAttachment } from '../lib/storage';
 import { 
   Mic, UploadCloud, Copy, Check, ExternalLink, Calendar as CalendarIcon, 
-  MessageSquare, Briefcase, User, ChevronRight, AlertCircle, Sparkles, Monitor, Sun, Moon, Square, Lightbulb, Bell, BellOff, BellRing
+  MessageSquare, Briefcase, User, ChevronRight, AlertCircle, Sparkles, Monitor, Sun, Moon, Square, Lightbulb, Bell, BellOff, BellRing, Shield
 } from 'lucide-react';
 import { format, isAfter, isToday, parseISO, addDays, subDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -17,7 +17,7 @@ import { useWebPush } from '../hooks/useWebPush';
 import { parseVoiceExpense } from '../utils/voiceParser';
 
 export default function MobilePocket() {
-  const { user } = useAuth();
+  const { user, isSuperAdmin } = useAuth();
   const navigate = useNavigate();
 
   // Estados principais
@@ -314,6 +314,19 @@ export default function MobilePocket() {
           >
             <Monitor size={15} />
           </button>
+          {isSuperAdmin && (
+            <button
+              onClick={() => navigate('/admin')}
+              title="Painel Multi-Tenant (Admin)"
+              style={{
+                background: 'rgba(99, 102, 241, 0.14)', border: '1px solid rgba(99, 102, 241, 0.35)',
+                color: 'var(--accent-primary)', padding: '6px', borderRadius: '8px', cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center'
+              }}
+            >
+              <Shield size={15} />
+            </button>
+          )}
         </div>
       </header>
 

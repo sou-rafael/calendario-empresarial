@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../components/AuthProvider';
 import { supabase } from '../lib/supabase';
-import { LogOut, ChevronLeft, ChevronRight, Plus, Filter, Settings, Sun, Moon, UploadCloud, ChevronDown } from 'lucide-react';
+import { LogOut, ChevronLeft, ChevronRight, Plus, Filter, Settings, Sun, Moon, UploadCloud, ChevronDown, Shield } from 'lucide-react';
 import { 
   format, addMonths, subMonths, startOfMonth, endOfMonth, 
   startOfWeek, endOfWeek, isSameMonth, isSameDay, addDays, eachDayOfInterval
 } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useNavigate } from 'react-router-dom';
 import BillModal from './BillModal';
 import BoletoImportModal from './BoletoImportModal';
 import CategoryModal from './CategoryModal';
@@ -16,7 +16,8 @@ import Sidebar from './Sidebar';
 import MiniDashboard from './MiniDashboard';
 
 export default function Layout() {
-  const { user } = useAuth();
+  const { user, isSuperAdmin, isReadOnly } = useAuth();
+  const navigate = useNavigate();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
   
@@ -130,6 +131,21 @@ export default function Layout() {
     <div className="app-layout">
       <Sidebar currentContext={currentContext} setContext={setCurrentContext} />
       <div className="main-area">
+      {isReadOnly && (
+        <div style={{
+          background: 'rgba(56, 189, 248, 0.12)',
+          border: '1px solid rgba(56, 189, 248, 0.35)',
+          color: '#38bdf8',
+          padding: '0.6rem 1rem',
+          borderRadius: '12px',
+          marginBottom: '1rem',
+          fontSize: '0.82rem',
+          fontWeight: 600,
+          textAlign: 'center'
+        }}>
+          Sua conta está em modo <strong>Somente Leitura</strong>. Você pode consultar todos os lançamentos e relatórios, mas novas alterações estão temporariamente bloqueadas.
+        </div>
+      )}
       
       <header style={{ 
         display: 'flex', justifyContent: 'space-between', alignItems: 'center', 
@@ -212,6 +228,33 @@ export default function Layout() {
                   {user?.email}
                 </span>
               </div>
+
+              {/* Atalho exclusivo do Super Admin para o Backoffice Multi-Tenant */}
+              {isSuperAdmin && (
+                <button
+                  onClick={() => { setIsUserMenuOpen(false); navigate('/admin'); }}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    width: '100%',
+                    padding: '8px 10px',
+                    background: 'rgba(99, 102, 241, 0.1)',
+                    border: '1px solid rgba(99, 102, 241, 0.25)',
+                    borderRadius: '10px',
+                    color: 'var(--accent-primary)',
+                    fontSize: '0.84rem',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    marginBottom: '2px',
+                    transition: 'background 0.15s'
+                  }}
+                >
+                  <Shield size={16} color="var(--accent-primary)" />
+                  <span>Painel Multi-Tenant</span>
+                </button>
+              )}
 
               {/* Opção Alternar Tema */}
               <button
