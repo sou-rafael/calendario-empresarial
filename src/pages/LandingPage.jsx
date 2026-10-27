@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Mic, Camera, Calendar, CheckCircle2, ShieldCheck, Zap, ArrowRight, 
@@ -10,6 +10,27 @@ import {
 export default function LandingPage() {
   const navigate = useNavigate();
   const [openFaq, setOpenFaq] = useState(null);
+  const [isLightMode, setIsLightMode] = useState(false);
+
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'light') {
+      setIsLightMode(true);
+      document.body.classList.add('light-mode');
+    }
+  }, []);
+
+  const toggleTheme = () => {
+    if (isLightMode) {
+      document.body.classList.remove('light-mode');
+      localStorage.setItem('theme', 'dark');
+      setIsLightMode(false);
+    } else {
+      document.body.classList.add('light-mode');
+      localStorage.setItem('theme', 'light');
+      setIsLightMode(true);
+    }
+  };
 
   const toggleFaq = (idx) => {
     setOpenFaq(openFaq === idx ? null : idx);
@@ -62,7 +83,7 @@ export default function LandingPage() {
         zIndex: 100,
         backdropFilter: 'blur(16px)',
         WebkitBackdropFilter: 'blur(16px)',
-        backgroundColor: 'rgba(15, 23, 42, 0.85)',
+        backgroundColor: isLightMode ? 'rgba(255, 255, 255, 0.88)' : 'rgba(15, 23, 42, 0.85)',
         borderBottom: '1px solid var(--border-color)',
         padding: '0.9rem 1.5rem'
       }}>
@@ -103,6 +124,27 @@ export default function LandingPage() {
               <a href="#visao-gerencial" style={{ color: 'var(--text-secondary)', textDecoration: 'none', fontSize: '0.9rem', fontWeight: 500 }}>DRE & Relatórios</a>
               <a href="#faq" style={{ color: 'var(--text-secondary)', textDecoration: 'none', fontSize: '0.9rem', fontWeight: 500 }}>Dúvidas</a>
             </nav>
+
+            <button 
+              onClick={toggleTheme}
+              title={isLightMode ? 'Mudar para Modo Escuro' : 'Mudar para Modo Claro'}
+              aria-label="Alternar tema de cores"
+              style={{
+                background: 'var(--item-bg)',
+                border: '1px solid var(--border-color)',
+                borderRadius: '10px',
+                padding: '0.55rem',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: isLightMode ? '#f59e0b' : '#818cf8',
+                transition: 'all 0.2s',
+                boxShadow: 'var(--shadow-sm)'
+              }}
+            >
+              {isLightMode ? <Sun size={18} /> : <Moon size={18} />}
+            </button>
 
             <button 
               onClick={handleGoToApp}
