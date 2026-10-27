@@ -4,13 +4,14 @@ import {
   Mic, Camera, Calendar, CheckCircle2, ShieldCheck, Zap, ArrowRight, 
   Smartphone, ChevronDown, ChevronUp, Copy, Clock, DollarSign, 
   Sparkles, Star, TrendingUp, Check, Play, FileText, LayoutDashboard, 
-  ListFilter, Bell, BarChart3, Tag, Moon, Sun, Monitor
+  ListFilter, Bell, BarChart3, Tag, Moon, Sun, Monitor, CreditCard, Lock, RefreshCw, Flame
 } from 'lucide-react';
 
 export default function LandingPage() {
   const navigate = useNavigate();
   const [openFaq, setOpenFaq] = useState(null);
   const [isLightMode, setIsLightMode] = useState(false);
+  const [billingCycle, setBillingCycle] = useState('anual'); // 'mensal' ou 'anual'
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme');
@@ -64,6 +65,18 @@ export default function LandingPage() {
     {
       q: 'Meus dados e documentos estão seguros?',
       a: 'Totalmente. O sistema roda em banco de dados isolado por usuário com políticas de segurança RLS (Row Level Security) e criptografia de ponta a ponta no armazenamento dos seus boletos.'
+    },
+    {
+      q: 'Como funciona o período de 7 dias gratuitos?',
+      a: 'Você tem acesso irrestrito a todas as funcionalidades do KdConta por 7 dias. Você pode importar seus boletos, testar os comandos de voz e usar o DRE. Se decidir não continuar, basta cancelar nas configurações da conta antes do 7º dia e nada será cobrado.'
+    },
+    {
+      q: 'Quais são as formas de pagamento aceitas?',
+      a: 'Aceitamos cartões de crédito (Visa, Mastercard, Elo, Hipercard) com cobrança mensal ou anual em até 12x. Para o Plano Anual com desconto, também aceitamos pagamento à vista via Pix.'
+    },
+    {
+      q: 'E se eu quiser cancelar depois?',
+      a: 'Você é livre! No plano mensal, não existe período de fidelidade: cancelando hoje, não haverá renovação no mês seguinte. No plano anual, você mantém o acesso garantido até o fim dos 12 meses contratados.'
     }
   ];
 
@@ -122,6 +135,7 @@ export default function LandingPage() {
               <a href="#funcionalidades" style={{ color: 'var(--text-secondary)', textDecoration: 'none', fontSize: '0.9rem', fontWeight: 500 }}>Funcionalidades</a>
               <a href="#mobile" style={{ color: 'var(--text-secondary)', textDecoration: 'none', fontSize: '0.9rem', fontWeight: 500 }}>App Mobile</a>
               <a href="#visao-gerencial" style={{ color: 'var(--text-secondary)', textDecoration: 'none', fontSize: '0.9rem', fontWeight: 500 }}>DRE & Relatórios</a>
+              <a href="#planos" style={{ color: 'var(--accent-primary)', textDecoration: 'none', fontSize: '0.9rem', fontWeight: 700 }}>Planos & Preços</a>
               <a href="#faq" style={{ color: 'var(--text-secondary)', textDecoration: 'none', fontSize: '0.9rem', fontWeight: 500 }}>Dúvidas</a>
             </nav>
 
@@ -886,7 +900,437 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* 8. FAQ (PERGUNTAS FREQUENTES REVISADAS) */}
+      {/* 8. SEÇÃO DE PREÇOS & PLANOS (CONVERSÃO MÁXIMA) */}
+      <section id="planos" style={{
+        maxWidth: '1150px',
+        margin: '0 auto 6rem',
+        padding: '0 1.5rem',
+        position: 'relative'
+      }}>
+        {/* Glow Decorativo de Fundo */}
+        <div style={{
+          position: 'absolute',
+          top: '30%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: '600px',
+          height: '350px',
+          background: 'radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%)',
+          filter: 'blur(70px)',
+          pointerEvents: 'none',
+          zIndex: 0
+        }} />
+
+        {/* Cabeçalho da Seção */}
+        <div style={{ textAlign: 'center', marginBottom: '2.5rem', position: 'relative', zIndex: 1 }}>
+          <span style={{
+            fontSize: '0.82rem',
+            color: 'var(--accent-primary)',
+            fontWeight: 800,
+            textTransform: 'uppercase',
+            letterSpacing: '0.08em',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '6px'
+          }}>
+            <Sparkles size={16} /> Preço Justo e Sem Surpresas
+          </span>
+          <h2 style={{ fontSize: 'clamp(2rem, 4vw, 2.7rem)', fontWeight: 800, marginTop: '0.5rem', letterSpacing: '-0.02em' }}>
+            Quanto custa nunca mais pagar juros ou atrasar contas?
+          </h2>
+          <p style={{ color: 'var(--text-secondary)', maxWidth: '650px', margin: '0.75rem auto 0', fontSize: '1.05rem', lineHeight: 1.6 }}>
+            Experimente <strong>7 dias gratuitamente</strong>. Uma única multa evitada no mês já paga o investimento de vários meses de assinatura.
+          </p>
+
+          {/* Toggle Mensal vs Anual */}
+          <div style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            backgroundColor: isLightMode ? '#e2e8f0' : 'rgba(255, 255, 255, 0.06)',
+            padding: '4px',
+            borderRadius: '50px',
+            marginTop: '2rem',
+            border: '1px solid var(--border-color)',
+            position: 'relative'
+          }}>
+            <button
+              onClick={() => setBillingCycle('mensal')}
+              style={{
+                padding: '0.6rem 1.4rem',
+                borderRadius: '50px',
+                border: 'none',
+                backgroundColor: billingCycle === 'mensal' ? (isLightMode ? '#ffffff' : 'var(--accent-primary)') : 'transparent',
+                color: billingCycle === 'mensal' ? (isLightMode ? '#0f172a' : '#ffffff') : 'var(--text-secondary)',
+                fontWeight: 700,
+                fontSize: '0.9rem',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                boxShadow: billingCycle === 'mensal' ? '0 2px 8px rgba(0,0,0,0.15)' : 'none'
+              }}
+            >
+              Mensal
+            </button>
+
+            <button
+              onClick={() => setBillingCycle('anual')}
+              style={{
+                padding: '0.6rem 1.4rem',
+                borderRadius: '50px',
+                border: 'none',
+                backgroundColor: billingCycle === 'anual' ? (isLightMode ? '#ffffff' : 'var(--accent-primary)') : 'transparent',
+                color: billingCycle === 'anual' ? (isLightMode ? '#0f172a' : '#ffffff') : 'var(--text-secondary)',
+                fontWeight: 700,
+                fontSize: '0.9rem',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                transition: 'all 0.2s',
+                boxShadow: billingCycle === 'anual' ? '0 2px 8px rgba(0,0,0,0.15)' : 'none'
+              }}
+            >
+              Anual
+              <span style={{
+                backgroundColor: '#10b981',
+                color: '#ffffff',
+                fontSize: '0.72rem',
+                padding: '2px 8px',
+                borderRadius: '20px',
+                fontWeight: 800
+              }}>
+                2 Meses Grátis
+              </span>
+            </button>
+          </div>
+        </div>
+
+        {/* Grid dos Cards de Preço */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+          gap: '2rem',
+          maxWidth: '920px',
+          margin: '0 auto',
+          position: 'relative',
+          zIndex: 1,
+          alignItems: 'stretch'
+        }}>
+
+          {/* CARD 1: PLANO MENSAL */}
+          <div style={{
+            backgroundColor: isLightMode ? '#ffffff' : 'var(--item-bg)',
+            border: '1px solid var(--border-color)',
+            borderRadius: '24px',
+            padding: '2.5rem 2rem',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            boxShadow: isLightMode ? '0 10px 30px -5px rgba(0,0,0,0.06)' : 'var(--shadow-md)',
+            position: 'relative',
+            transition: 'all 0.2s'
+          }}>
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '0.85rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-secondary)', letterSpacing: '0.05em' }}>
+                  Plano Mensal Flexível
+                </span>
+                <span style={{
+                  fontSize: '0.75rem',
+                  padding: '3px 10px',
+                  borderRadius: '20px',
+                  backgroundColor: 'rgba(255, 255, 255, 0.08)',
+                  color: 'var(--text-muted)',
+                  fontWeight: 600
+                }}>
+                  Sem Fidelidade
+                </span>
+              </div>
+
+              <div style={{ marginTop: '1.25rem', marginBottom: '1.25rem' }}>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
+                  <span style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--text-muted)' }}>R$</span>
+                  <span style={{ fontSize: '3.2rem', fontWeight: 800, letterSpacing: '-0.03em', color: 'var(--text-primary)' }}>19,90</span>
+                  <span style={{ fontSize: '0.95rem', color: 'var(--text-muted)', fontWeight: 600 }}>/mês</span>
+                </div>
+                <p style={{ fontSize: '0.85rem', color: '#10b981', fontWeight: 700, marginTop: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <CheckCircle2 size={15} /> 7 primeiros dias 100% gratuitos
+                </p>
+                <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+                  Cobrança no cartão de crédito após os 7 dias. Cancele quando quiser.
+                </p>
+              </div>
+
+              <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '1.5rem', marginBottom: '2rem' }}>
+                <span style={{ fontSize: '0.82rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)', display: 'block', marginBottom: '1rem', letterSpacing: '0.05em' }}>
+                  Tudo o que está incluso:
+                </span>
+                <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <li style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', fontSize: '0.9rem', color: 'var(--text-primary)' }}>
+                    <div style={{ color: '#10b981', marginTop: '2px' }}><Check size={16} strokeWidth={3} /></div>
+                    <span><strong>Leitor de Boletos:</strong> Câmera e PDFs ilimitados</span>
+                  </li>
+                  <li style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', fontSize: '0.9rem', color: 'var(--text-primary)' }}>
+                    <div style={{ color: '#10b981', marginTop: '2px' }}><Check size={16} strokeWidth={3} /></div>
+                    <span><strong>Lançamento por Voz:</strong> Fale e agende instantaneamente</span>
+                  </li>
+                  <li style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', fontSize: '0.9rem', color: 'var(--text-primary)' }}>
+                    <div style={{ color: '#10b981', marginTop: '2px' }}><Check size={16} strokeWidth={3} /></div>
+                    <span><strong>Calendário Financeiro:</strong> Semáforo e baixa em 1 clique</span>
+                  </li>
+                  <li style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', fontSize: '0.9rem', color: 'var(--text-primary)' }}>
+                    <div style={{ color: '#10b981', marginTop: '2px' }}><Check size={16} strokeWidth={3} /></div>
+                    <span><strong>Web Desktop + App Mobile Pocket (PWA)</strong></span>
+                  </li>
+                  <li style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', fontSize: '0.9rem', color: 'var(--text-primary)' }}>
+                    <div style={{ color: '#10b981', marginTop: '2px' }}><Check size={16} strokeWidth={3} /></div>
+                    <span><strong>DRE Gerencial do Mês</strong> e Dashboard analítico</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            <button
+              onClick={handleGoToApp}
+              style={{
+                width: '100%',
+                padding: '0.95rem 1.5rem',
+                backgroundColor: isLightMode ? '#f1f5f9' : 'rgba(255, 255, 255, 0.08)',
+                color: 'var(--text-primary)',
+                border: '1px solid var(--border-color)',
+                borderRadius: '12px',
+                fontWeight: 700,
+                fontSize: '0.95rem',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                transition: 'all 0.2s'
+              }}
+            >
+              Testar 7 Dias Grátis <ArrowRight size={16} />
+            </button>
+          </div>
+
+          {/* CARD 2: PLANO ANUAL (RECOMENDADO / MAIS POPULAR) */}
+          <div style={{
+            backgroundColor: isLightMode ? '#ffffff' : 'rgba(30, 41, 59, 0.85)',
+            border: '2px solid #6366f1',
+            borderRadius: '24px',
+            padding: '2.5rem 2rem',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            boxShadow: '0 12px 35px -5px rgba(99, 102, 241, 0.35)',
+            position: 'relative',
+            zIndex: 2
+          }}>
+            {/* Badge de Destaque Superior */}
+            <div style={{
+              position: 'absolute',
+              top: '-14px',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              backgroundColor: '#6366f1',
+              color: '#ffffff',
+              fontSize: '0.75rem',
+              fontWeight: 800,
+              padding: '4px 16px',
+              borderRadius: '20px',
+              textTransform: 'uppercase',
+              letterSpacing: '0.06em',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              boxShadow: '0 4px 12px rgba(99, 102, 241, 0.4)'
+            }}>
+              <Flame size={14} /> Recomendado • Melhor Custo-Benefício
+            </div>
+
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '0.85rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--accent-primary)', letterSpacing: '0.05em' }}>
+                  Plano Anual Econômico
+                </span>
+                <span style={{
+                  fontSize: '0.75rem',
+                  padding: '3px 10px',
+                  borderRadius: '20px',
+                  backgroundColor: 'rgba(16, 185, 129, 0.15)',
+                  color: '#10b981',
+                  fontWeight: 700
+                }}>
+                  Economize R$ 48/ano
+                </span>
+              </div>
+
+              <div style={{ marginTop: '1.25rem', marginBottom: '1.25rem' }}>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
+                  <span style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--text-muted)' }}>R$</span>
+                  <span style={{
+                    fontSize: '3.4rem',
+                    fontWeight: 800,
+                    letterSpacing: '-0.03em',
+                    background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent'
+                  }}>
+                    15,80
+                  </span>
+                  <span style={{ fontSize: '0.95rem', color: 'var(--text-muted)', fontWeight: 600 }}>/mês</span>
+                </div>
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 600, marginTop: '4px' }}>
+                  Faturado R$ 190,00/ano à vista (ou 12x no cartão)
+                </p>
+                <p style={{ fontSize: '0.82rem', color: '#10b981', fontWeight: 700, marginTop: '2px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Sparkles size={14} /> Leve 12 meses pagando apenas 10
+                </p>
+              </div>
+
+              <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '1.5rem', marginBottom: '2rem' }}>
+                <span style={{ fontSize: '0.82rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--accent-primary)', display: 'block', marginBottom: '1rem', letterSpacing: '0.05em' }}>
+                  Tudo do plano mensal e mais:
+                </span>
+                <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <li style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', fontSize: '0.9rem', color: 'var(--text-primary)' }}>
+                    <div style={{ color: '#10b981', marginTop: '2px' }}><Check size={16} strokeWidth={3} /></div>
+                    <span><strong>Acesso Completo e Ilimitado:</strong> Voz, Boletos, DRE e Mobile</span>
+                  </li>
+                  <li style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', fontSize: '0.9rem', color: 'var(--text-primary)' }}>
+                    <div style={{ color: '#10b981', marginTop: '2px' }}><Check size={16} strokeWidth={3} /></div>
+                    <span><strong>Pagamento via Cartão ou Pix à vista</strong></span>
+                  </li>
+                  <li style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', fontSize: '0.9rem', color: 'var(--text-primary)' }}>
+                    <div style={{ color: '#10b981', marginTop: '2px' }}><Check size={16} strokeWidth={3} /></div>
+                    <span><strong>Preço Congelado:</strong> Garantia contra futuros aumentos</span>
+                  </li>
+                  <li style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', fontSize: '0.9rem', color: 'var(--text-primary)' }}>
+                    <div style={{ color: '#10b981', marginTop: '2px' }}><Check size={16} strokeWidth={3} /></div>
+                    <span><strong>Acesso VIP Antecipado:</strong> Consultor com IA quando lançado</span>
+                  </li>
+                  <li style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', fontSize: '0.9rem', color: 'var(--text-primary)' }}>
+                    <div style={{ color: '#10b981', marginTop: '2px' }}><Check size={16} strokeWidth={3} /></div>
+                    <span><strong>Suporte Prioritário</strong> direto pelo WhatsApp</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            <button
+              onClick={handleGoToApp}
+              style={{
+                width: '100%',
+                padding: '1.05rem 1.5rem',
+                backgroundColor: '#6366f1',
+                color: '#ffffff',
+                border: 'none',
+                borderRadius: '12px',
+                fontWeight: 800,
+                fontSize: '1rem',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                boxShadow: '0 6px 20px rgba(99, 102, 241, 0.45)',
+                transition: 'all 0.2s'
+              }}
+            >
+              Assinar Plano Anual com 2 Meses Grátis <ArrowRight size={18} />
+            </button>
+          </div>
+
+        </div>
+
+        {/* Faixa de Confiança & Risco Zero */}
+        <div style={{
+          marginTop: '3.5rem',
+          padding: '1.5rem 2rem',
+          borderRadius: '16px',
+          backgroundColor: isLightMode ? '#f1f5f9' : 'rgba(255, 255, 255, 0.02)',
+          border: '1px solid var(--border-color)',
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+          gap: '1.5rem',
+          textAlign: 'left'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+            <div style={{
+              width: '42px',
+              height: '42px',
+              borderRadius: '10px',
+              backgroundColor: 'rgba(16, 185, 129, 0.15)',
+              color: '#10b981',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0
+            }}>
+              <ShieldCheck size={22} />
+            </div>
+            <div>
+              <strong style={{ fontSize: '0.9rem', display: 'block', color: 'var(--text-primary)' }}>7 Dias de Garantia Total</strong>
+              <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Teste sem nenhum risco financeiro.</span>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+            <div style={{
+              width: '42px',
+              height: '42px',
+              borderRadius: '10px',
+              backgroundColor: 'rgba(99, 102, 241, 0.15)',
+              color: 'var(--accent-primary)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0
+            }}>
+              <RefreshCw size={20} />
+            </div>
+            <div>
+              <strong style={{ fontSize: '0.9rem', display: 'block', color: 'var(--text-primary)' }}>Cancelamento Transparente</strong>
+              <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Sem burocracia ou letras miúdas no painel.</span>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+            <div style={{
+              width: '42px',
+              height: '42px',
+              borderRadius: '10px',
+              backgroundColor: 'rgba(245, 158, 11, 0.15)',
+              color: '#f59e0b',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0
+            }}>
+              <Lock size={20} />
+            </div>
+            <div>
+              <strong style={{ fontSize: '0.9rem', display: 'block', color: 'var(--text-primary)' }}>Dados 100% Protegidos</strong>
+              <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Criptografia de ponta e isolamento total (RLS).</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Box de Ancoragem de ROI */}
+        <div style={{
+          marginTop: '2rem',
+          padding: '1.25rem 1.5rem',
+          borderRadius: '14px',
+          background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(16, 185, 129, 0.08) 100%)',
+          border: '1px dashed rgba(99, 102, 241, 0.3)',
+          textAlign: 'center'
+        }}>
+          <p style={{ fontSize: '0.92rem', color: 'var(--text-secondary)', margin: 0 }}>
+            💡 <strong style={{ color: 'var(--text-primary)' }}>Faça a conta:</strong> Uma única conta de energia ou boleto de fornecedor de R$ 1.200 pago com 5 dias de atraso gera até <strong>R$ 38,00 em juros e multa</strong>. O KdConta custa apenas <strong>R$ 15,80/mês</strong> no plano anual. O produto se paga sozinho logo no primeiro mês.
+          </p>
+        </div>
+      </section>
+
+      {/* 9. FAQ (PERGUNTAS FREQUENTES REVISADAS) */}
       <section id="faq" style={{
         maxWidth: '850px',
         margin: '0 auto 6rem',
@@ -951,7 +1395,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* 9. CTA FINAL (RODAPÉ DE CAPTAÇÃO) */}
+      {/* 10. CTA FINAL (RODAPÉ DE CAPTAÇÃO) */}
       <section style={{
         backgroundColor: 'rgba(99, 102, 241, 0.08)',
         borderTop: '1px solid rgba(99, 102, 241, 0.2)',
@@ -988,7 +1432,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* 10. FOOTER */}
+      {/* 11. FOOTER */}
       <footer style={{
         padding: '2.5rem 1.5rem',
         borderTop: '1px solid var(--border-color)',
