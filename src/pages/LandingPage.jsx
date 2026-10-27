@@ -924,8 +924,12 @@ export default function LandingPage() {
         {/* Cabeçalho da Seção */}
         <div style={{ textAlign: 'center', marginBottom: '2.5rem', position: 'relative', zIndex: 1 }}>
           <span style={{
-            fontSize: '0.82rem',
-            color: 'var(--accent-primary)',
+            fontSize: '0.78rem',
+            background: 'rgba(239, 68, 68, 0.12)',
+            border: '1px solid rgba(239, 68, 68, 0.3)',
+            color: '#ef4444',
+            padding: '5px 14px',
+            borderRadius: '50px',
             fontWeight: 800,
             textTransform: 'uppercase',
             letterSpacing: '0.08em',
@@ -933,13 +937,13 @@ export default function LandingPage() {
             alignItems: 'center',
             gap: '6px'
           }}>
-            <Sparkles size={16} /> Preço Justo e Sem Surpresas
+            <Flame size={15} /> Lote de Lançamento • Membro Fundador
           </span>
-          <h2 style={{ fontSize: 'clamp(2rem, 4vw, 2.7rem)', fontWeight: 800, marginTop: '0.5rem', letterSpacing: '-0.02em' }}>
-            Quanto custa nunca mais pagar juros ou atrasar contas?
+          <h2 style={{ fontSize: 'clamp(2rem, 4vw, 2.7rem)', fontWeight: 800, marginTop: '0.65rem', letterSpacing: '-0.02em' }}>
+            Garanta sua assinatura com Preço Promocional Congelado
           </h2>
-          <p style={{ color: 'var(--text-secondary)', maxWidth: '650px', margin: '0.75rem auto 0', fontSize: '1.05rem', lineHeight: 1.6 }}>
-            Experimente <strong>7 dias gratuitamente</strong>. Uma única multa evitada no mês já paga o investimento de vários meses de assinatura.
+          <p style={{ color: 'var(--text-secondary)', maxWidth: '680px', margin: '0.75rem auto 0', fontSize: '1.02rem', lineHeight: 1.6 }}>
+            Assine agora na versão 1.0 e <strong>trave esta condição vitalícia para sempre na sua conta</strong>, mesmo com a entrada dos futuros planos e recursos com Inteligência Artificial.
           </p>
 
           {/* Toggle Mensal vs Anual */}
@@ -1047,6 +1051,14 @@ export default function LandingPage() {
               </div>
 
               <div style={{ marginTop: '1.25rem', marginBottom: '1.25rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                  <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)', textDecoration: 'line-through', fontWeight: 600 }}>
+                    De R$ 39,90
+                  </span>
+                  <span style={{ fontSize: '0.72rem', backgroundColor: 'rgba(239, 68, 68, 0.15)', color: '#ef4444', padding: '2px 8px', borderRadius: '6px', fontWeight: 800 }}>
+                    50% OFF LANÇAMENTO
+                  </span>
+                </div>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
                   <span style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--text-muted)' }}>R$</span>
                   <span style={{ fontSize: '3.2rem', fontWeight: 800, letterSpacing: '-0.03em', color: 'var(--text-primary)' }}>19,90</span>
@@ -1056,7 +1068,7 @@ export default function LandingPage() {
                   <CheckCircle2 size={15} /> 7 primeiros dias 100% gratuitos
                 </p>
                 <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginTop: '2px' }}>
-                  Cobrança no cartão de crédito após os 7 dias. Cancele quando quiser.
+                  🔒 Preço de R$ 19,90 congelado vitalício enquanto mantiver ativa.
                 </p>
               </div>
 
@@ -1144,7 +1156,7 @@ export default function LandingPage() {
               gap: '6px',
               boxShadow: '0 4px 12px rgba(99, 102, 241, 0.4)'
             }}>
-              <Flame size={14} /> Recomendado • Melhor Custo-Benefício
+              <Sparkles size={14} /> Lote 1 Fundador • Mais Escolhido
             </div>
 
             <div>

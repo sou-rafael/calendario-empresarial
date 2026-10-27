@@ -193,7 +193,27 @@ calendario_empresarial/
 
 ---
 
-## 6. Diretrizes e Regras de Ouro para Agentes
+## 6. Roadmap Comercial & Estratégia de Precificação (Execução em Produção)
+
+> **Diretriz de Negócio (Aprovada pelo Fundador):** O produto opera no lançamento com a estratégia de **Lote de Membros Fundadores** e migrará para uma **Escada em 3 Tiers** conforme a maturação dos recursos.
+
+### Fase Atual (Lançamento / Early Access):
+* **Posicionamento:** Membro Fundador com Preço Congelado.
+* **Mensal:** De ~~R$ 39,90~~ por **R$ 19,90/mês** (7 dias grátis).
+* **Anual:** **R$ 190,00/ano à vista** (ou 12x de R$ 15,80/mês via Cartão ou Pix).
+
+### Próxima Fase (Escada de 3 Tiers para Produção Madura — 6 a 12 Meses):
+1. **Tier 1 — KdConta Solo (R$ 29,90/mês ou R$ 290/ano):** 1 usuário, 1 CNPJ/CPF, scanner até 40 boletos/mês, voz, calendário, DRE e mobile.
+2. **Tier 2 — KdConta Pro (R$ 59,90 a R$ 69,90/mês ou R$ 590/ano):** Scanner ilimitado, **Consultor IA Conversacional**, **Alertas no WhatsApp às 08h**, contas recorrentes, exportação contábil para o contador e 2 usuários.
+3. **Tier 3 — KdConta Business (R$ 119,90 a R$ 149,90/mês ou R$ 1.190/ano):** Multi-CNPJ/Multi-Empresa, até 5 usuários com níveis de permissão, login gratuito do contador e conciliação bancária OFX/Open Finance.
+
+### Política de Grandfathering (Retenção e Up-sell):
+* Quem assinou a R$ 19,90/mês mantém R$ 19,90 vitalício no plano Solo.
+* Up-sell com 50% de desconto para o Plano Pro com IA (R$ 29,90/mês em vez de R$ 59,90) aumentando o ARPU sem atrito.
+
+---
+
+## 7. Diretrizes e Regras de Ouro para Agentes
 
 1. **Integridade Visual & Estabilidade:** Não altere estruturas de layout consolidadas ou rotas sem solicitação explícita do usuário.
 2. **Tema Dark & Light First:** Todo novo componente, modal ou card **deve** usar as variáveis CSS dinâmicas (`var(--bg-primary)`, `var(--text-primary)`, `var(--border-color)`, `var(--modal-bg)`), garantindo coerência visual imediata em ambos os temas.
