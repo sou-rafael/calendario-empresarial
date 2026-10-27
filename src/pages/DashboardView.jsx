@@ -9,7 +9,7 @@ import CustomSelect from '../components/CustomSelect';
 const COLORS = ['#6366f1', '#ec4899', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444', '#14b8a6', '#f97316'];
 
 export default function DashboardView() {
-  const { currentContext, categories } = useOutletContext();
+  const { user, currentContext, categories } = useOutletContext();
   const [timeframe, setTimeframe] = useState('1m');
   const [dashboardBills, setDashboardBills] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -29,6 +29,7 @@ export default function DashboardView() {
         const { data, error } = await supabase
           .from('bills')
           .select('*')
+          .eq('user_id', user?.id)
           .eq('context', currentContext)
           .gte('date', format(startDate, 'yyyy-MM-dd'))
           .lte('date', format(endDate, 'yyyy-MM-dd'));

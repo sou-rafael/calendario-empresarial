@@ -1,16 +1,36 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { AuthProvider } from './components/AuthProvider';
 import ProtectedRoute from './components/ProtectedRoute';
 import { ErrorBoundary } from './components/ErrorBoundary';
-import Login from './pages/Login';
-import Layout from './components/Layout';
-import CalendarView from './pages/CalendarView';
-import ListView from './pages/ListView';
-import DreView from './pages/DreView';
-import DashboardView from './pages/DashboardView';
-import MobilePocket from './pages/MobilePocket';
-import LandingPage from './pages/LandingPage';
+
+// Lazy loading para separar os chunks e acelerar o carregamento inicial (Landing Page & App)
+const LandingPage = lazy(() => import('./pages/LandingPage'));
+const Login = lazy(() => import('./pages/Login'));
+const Layout = lazy(() => import('./components/Layout'));
+const CalendarView = lazy(() => import('./pages/CalendarView'));
+const ListView = lazy(() => import('./pages/ListView'));
+const DreView = lazy(() => import('./pages/DreView'));
+const DashboardView = lazy(() => import('./pages/DashboardView'));
+const MobilePocket = lazy(() => import('./pages/MobilePocket'));
+
+function PageLoader() {
+  return (
+    <div style={{
+      minHeight: '100vh',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: 'var(--bg-color)',
+      color: 'var(--accent-primary)',
+      fontFamily: "'Plus Jakarta Sans', sans-serif",
+      fontSize: '0.9rem',
+      fontWeight: 600
+    }}>
+      Carregando KdConta...
+    </div>
+  );
+}
 
 function MobileAutoRedirect({ children }) {
   const location = useLocation();
@@ -49,43 +69,45 @@ function App() {
       <AuthProvider>
         <BrowserRouter>
           <MobileAutoRedirect>
-            <Routes>
-              {/* Rota dedicada da Landing Page (acessível via /landing em qualquer ambiente) */}
-              <Route path="/landing" element={<LandingPage />} />
+            <Suspense fallback={<PageLoader />}>
+              <Routes>
+                {/* Rota dedicada da Landing Page (acessível via /landing em qualquer ambiente) */}
+                <Route path="/landing" element={<LandingPage />} />
 
-              <Route path="/login" element={<Login />} />
-              
-              {/* Rota PWA Pocket Mobile */}
-              <Route 
-                path="/mobile" 
-                element={
-                  <ProtectedRoute>
-                    <MobilePocket />
-                  </ProtectedRoute>
-                } 
-              />
-
-              {/* Rota Web Desktop Completa (ou Landing Page se estiver no domínio raiz de vendas) */}
-              <Route 
-                path="/" 
-                element={
-                  isMarketingDomain ? (
-                    <LandingPage />
-                  ) : (
+                <Route path="/login" element={<Login />} />
+                
+                {/* Rota PWA Pocket Mobile */}
+                <Route 
+                  path="/mobile" 
+                  element={
                     <ProtectedRoute>
-                      <Layout />
+                      <MobilePocket />
                     </ProtectedRoute>
-                  )
-                } 
-              >
-                <Route index element={<CalendarView />} />
-                <Route path="list" element={<ListView />} />
-                <Route path="dre" element={<DreView />} />
-                <Route path="dashboard" element={<DashboardView />} />
-              </Route>
+                  } 
+                />
 
-              <Route path="*" element={<Navigate to={isMarketingDomain ? "/landing" : "/"} replace />} />
-            </Routes>
+                {/* Rota Web Desktop Completa (ou Landing Page se estiver no domínio raiz de vendas) */}
+                <Route 
+                  path="/" 
+                  element={
+                    isMarketingDomain ? (
+                      <LandingPage />
+                    ) : (
+                      <ProtectedRoute>
+                        <Layout />
+                      </ProtectedRoute>
+                    )
+                  } 
+                >
+                  <Route index element={<CalendarView />} />
+                  <Route path="list" element={<ListView />} />
+                  <Route path="dre" element={<DreView />} />
+                  <Route path="dashboard" element={<DashboardView />} />
+                </Route>
+
+                <Route path="*" element={<Navigate to={isMarketingDomain ? "/landing" : "/"} replace />} />
+              </Routes>
+            </Suspense>
           </MobileAutoRedirect>
         </BrowserRouter>
       </AuthProvider>

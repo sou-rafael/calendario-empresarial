@@ -1,16 +1,32 @@
-# React + Vite
+# 📅 KdConta — "Cadê a conta?"
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Plataforma moderna de **Gestão Financeira de Contas a Pagar e Fluxo de Caixa Diário** para pequenas empresas, autônomos e microempreendedores.
 
-Currently, two official plugins are available:
+## ✨ Principais Recursos
+- **Leitor Inteligente de Boletos (PDF e Câmera):** Extração de linha digitável (47/48 dígitos FEBRABAN), vencimento e valor com armazenamento privado via URLs assinadas.
+- **Lançamento por Comando de Voz:** Fale a despesa naturalmente e agende no calendário com 1 toque.
+- **Calendário Financeiro Mensal:** Semáforo visual (Pago, Pendente, Atrasado) e baixa rápida em 1 clique.
+- **DRE Gerencial & Dashboard Analítico:** Demonstração do Resultado do Exercício do mês e gráficos interativos.
+- **PWA Mobile First ("Modo Bolso"):** Interface adaptada para operação rápida no celular com cópia inteligente de código de barras.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## 🚀 Como Rodar Localmente
 
-## React Compiler
+1. Instale as dependências:
+   ```bash
+   npm install
+   ```
+2. Configure o arquivo `.env.local` com as chaves do projeto Supabase:
+   ```env
+   VITE_SUPABASE_URL=sua_url_do_supabase
+   VITE_SUPABASE_ANON_KEY=sua_anon_key_do_supabase
+   ```
+3. Inicie o servidor de desenvolvimento:
+   ```bash
+   npm run dev
+   ```
+4. Para gerar o build de produção:
+   ```bash
+   npm run build
+   ```
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+Consulte o arquivo [`AGENTS.md`](./AGENTS.md) para detalhes de arquitetura, banco de dados e políticas de segurança Multi-Tenant.

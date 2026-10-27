@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { supabase } from '../lib/supabase';
+import { uploadBoletoFile, openBoletoAttachment, deleteBoletoAttachment } from '../lib/storage';
 import { X, Check, Copy, FileText, ExternalLink, Paperclip } from 'lucide-react';
 import CustomSelect from './CustomSelect';
 import { format } from 'date-fns';
@@ -31,21 +32,9 @@ export default function BillModal({ isOpen, onClose, selectedDate, user, categor
       let originalFileName = null;
 
       if (file) {
-        originalFileName = file.name;
-        const fileExt = file.name.split('.').pop();
-        const filePath = `${user.id}/${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
-
-        const { error: uploadError } = await supabase.storage
-          .from('boletos')
-          .upload(filePath, file, { cacheControl: '3600', upsert: false });
-
-        if (uploadError) throw uploadError;
-
-        const { data: publicUrlData } = supabase.storage
-          .from('boletos')
-          .getPublicUrl(filePath);
-
-        uploadedFileUrl = publicUrlData?.publicUrl || null;
+        const uploaded = await uploadBoletoFile(file, user.id);
+        uploadedFileUrl = uploaded.filePath;
+        originalFileName = uploaded.fileName;
       }
 
       const { error } = await supabase.from('bills').insert([
@@ -77,10 +66,16 @@ export default function BillModal({ isOpen, onClose, selectedDate, user, categor
     }
   };
 
-  const handleDelete = async (id) => {
+  const handleDelete = async (bill) => {
+    if (!window.confirm(`Deseja realmente excluir o lançamento "${bill.description}"?`)) {
+      return;
+    }
     try {
-      const { error } = await supabase.from('bills').delete().eq('id', id);
+      const { error } = await supabase.from('bills').delete().eq('id', bill.id).eq('user_id', user.id);
       if (error) throw error;
+      if (bill.file_url) {
+        await deleteBoletoAttachment(bill.file_url);
+      }
       onBillSaved();
     } catch (error) {
       alert('Erro ao excluir conta: ' + error.message);
@@ -231,7 +226,7 @@ export default function BillModal({ isOpen, onClose, selectedDate, user, categor
 
                       <button 
                         type="button"
-                        onClick={() => handleDelete(bill.id)}
+                        onClick={() => handleDelete(bill)}
                         style={{ 
                           background: 'rgba(244, 63, 94, 0.08)', 
                           color: '#fb7185', 
@@ -276,10 +271,9 @@ export default function BillModal({ isOpen, onClose, selectedDate, user, categor
                       )}
 
                       {bill.file_url && (
-                        <a
-                          href={bill.file_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
+                        <button
+                          type="button"
+                          onClick={() => openBoletoAttachment(bill.file_url)}
                           style={{
                             background: 'rgba(16, 185, 129, 0.12)',
                             border: '1px solid rgba(16, 185, 129, 0.3)',
@@ -288,7 +282,7 @@ export default function BillModal({ isOpen, onClose, selectedDate, user, categor
                             padding: '4px 10px',
                             fontSize: '0.75rem',
                             fontWeight: 600,
-                            textDecoration: 'none',
+                            cursor: 'pointer',
                             display: 'flex',
                             alignItems: 'center',
                             gap: '5px'
@@ -296,7 +290,7 @@ export default function BillModal({ isOpen, onClose, selectedDate, user, categor
                         >
                           <ExternalLink size={13} />
                           Ver Boleto Anexo
-                        </a>
+                        </button>
                       )}
                     </div>
                   )}

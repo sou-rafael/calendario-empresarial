@@ -17,14 +17,14 @@ export default function MiniDashboard({ bills, currentDate, categories, currentC
   const saldo = totalReceitas - totalDespesas;
 
   const today = startOfDay(new Date());
-  const next5Days = addDays(today, 5);
+  const next7Days = addDays(today, 7);
   
   const upcomingBills = bills
     .filter(b => b.type !== 'receita' && b.status !== 'Pago')
     .filter(b => {
       if (!b.date) return false;
       const billDate = new Date(b.date + 'T00:00:00');
-      return (isAfter(billDate, today) || billDate.getTime() === today.getTime()) && isBefore(billDate, next5Days);
+      return (isAfter(billDate, today) || billDate.getTime() === today.getTime()) && isBefore(billDate, next7Days);
     })
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
     .slice(0, 4);

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { LogIn, UserPlus, AlertCircle } from 'lucide-react';
+import { LogIn, UserPlus, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '../components/AuthProvider';
 
 export default function Login() {
@@ -10,6 +10,7 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [successMsg, setSuccessMsg] = useState(null);
   const navigate = useNavigate();
   const { user } = useAuth();
 
@@ -21,18 +22,25 @@ export default function Login() {
     e.preventDefault();
     setLoading(true);
     setError(null);
+    setSuccessMsg(null);
+
+    const cleanEmail = email.trim().toLowerCase();
+
+    if (!isLogin && password.length < 8) {
+      setError('A senha deve ter pelo menos 8 caracteres para sua segurança.');
+      setLoading(false);
+      return;
+    }
 
     try {
       if (isLogin) {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        const { error } = await supabase.auth.signInWithPassword({ email: cleanEmail, password });
         if (error) throw error;
         navigate('/');
       } else {
-        const { error } = await supabase.auth.signUp({ email, password });
+        const { error } = await supabase.auth.signUp({ email: cleanEmail, password });
         if (error) throw error;
-        // Se der sucesso no signUp, geralmente precisa confirmar o email, mas o Supabase as vezes loga direto se não tiver confirmação ativada.
-        // Vamos mostrar uma mensagem se for o caso.
-        alert('Cadastro realizado! Se necessário, verifique seu email para confirmar a conta antes de fazer o login.');
+        setSuccessMsg('Cadastro realizado! Verifique sua caixa de entrada para confirmar o e-mail antes de fazer login.');
       }
     } catch (err) {
       setError(err.message);
@@ -61,7 +69,7 @@ export default function Login() {
             marginBottom: '1rem',
             boxShadow: 'var(--shadow-glow)'
           }}>
-            <LogIn size={28} color="white" />
+            {isLogin ? <LogIn size={28} color="white" /> : <UserPlus size={28} color="white" />}
           </div>
           <h2 style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>
             {isLogin ? 'Bem-vindo de volta' : 'Crie sua conta'}
@@ -72,12 +80,24 @@ export default function Login() {
         {error && (
           <div style={{ 
             display: 'flex', gap: '8px', alignItems: 'center', 
-            background: 'rgba(239, 68, 68, 0.1)', border: '1px solid var(--accent-danger)',
-            color: '#fca5a5', padding: '1rem', borderRadius: 'var(--radius-md)', marginBottom: '1.5rem',
-            fontSize: '0.9rem'
+            background: 'rgba(239, 68, 68, 0.1)', border: '1px solid #ef4444',
+            color: '#fca5a5', padding: '0.85rem 1rem', borderRadius: 'var(--radius-md)', marginBottom: '1.25rem',
+            fontSize: '0.88rem'
           }}>
-            <AlertCircle size={20} />
+            <AlertCircle size={18} style={{ flexShrink: 0 }} />
             <span>{error}</span>
+          </div>
+        )}
+
+        {successMsg && (
+          <div style={{ 
+            display: 'flex', gap: '8px', alignItems: 'center', 
+            background: 'rgba(16, 185, 129, 0.12)', border: '1px solid #10b981',
+            color: '#10b981', padding: '0.85rem 1rem', borderRadius: 'var(--radius-md)', marginBottom: '1.25rem',
+            fontSize: '0.88rem', fontWeight: 600
+          }}>
+            <CheckCircle2 size={18} style={{ flexShrink: 0 }} />
+            <span>{successMsg}</span>
           </div>
         )}
 
@@ -88,6 +108,7 @@ export default function Login() {
               id="email"
               type="email" 
               required
+              autoComplete="email"
               className="input-field" 
               placeholder="seu@email.com"
               value={email}
@@ -96,11 +117,15 @@ export default function Login() {
           </div>
 
           <div className="input-group">
-            <label className="input-label" htmlFor="password">Senha</label>
+            <label className="input-label" htmlFor="password">
+              Senha {!isLogin && <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>(mín. 8 caracteres)</span>}
+            </label>
             <input 
               id="password"
               type="password" 
               required
+              minLength={isLogin ? 6 : 8}
+              autoComplete={isLogin ? 'current-password' : 'new-password'}
               className="input-field" 
               placeholder="••••••••"
               value={password}
@@ -122,7 +147,7 @@ export default function Login() {
           <button 
             className="btn btn-secondary"
             style={{ fontSize: '0.85rem', padding: '0.5rem 1rem', border: 'none' }}
-            onClick={() => setIsLogin(!isLogin)}
+            onClick={() => { setIsLogin(!isLogin); setError(null); setSuccessMsg(null); }}
             type="button"
           >
             {isLogin ? 'Não tem uma conta? Cadastre-se' : 'Já tem uma conta? Faça login'}

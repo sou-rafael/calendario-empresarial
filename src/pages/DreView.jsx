@@ -1,39 +1,54 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useOutletContext } from 'react-router-dom';
+import { format } from 'date-fns';
 
 export default function DreView() {
-  const { bills, currentContext, categories } = useOutletContext();
+  const { bills, currentContext, categories, currentDate } = useOutletContext();
 
   const isEmpresarial = currentContext === 'empresarial';
-  
-  const receitasBills = bills.filter(b => b.type === 'receita');
-  const despesasBills = bills.filter(b => b.type === 'despesa' || !b.type);
 
-  const totalReceitas = receitasBills.reduce((acc, b) => acc + Number(b.amount), 0);
-  const totalDespesas = despesasBills.reduce((acc, b) => acc + Number(b.amount), 0);
-  
-  const resultadoLiquido = totalReceitas - totalDespesas;
+  // Filtra estritamente pelos lançamentos pertencentes ao mês de competência selecionado
+  const currentMonthPrefix = currentDate ? format(currentDate, 'yyyy-MM') : '';
 
-  // Agrupar despesas por categoria
-  const despesasPorCategoria = {};
-  categories.forEach(c => {
-    despesasPorCategoria[c.id] = { name: c.name, total: 0 };
-  });
+  const { totalReceitas, totalDespesas, resultadoLiquido, despesasOrdenadas } = useMemo(() => {
+    const monthBills = currentMonthPrefix
+      ? bills.filter(b => b.date && b.date.startsWith(currentMonthPrefix))
+      : bills;
 
-  despesasBills.forEach(b => {
-    if (b.category_id && despesasPorCategoria[b.category_id]) {
-      despesasPorCategoria[b.category_id].total += Number(b.amount);
-    } else {
-      if (!despesasPorCategoria['sem_categoria']) {
-        despesasPorCategoria['sem_categoria'] = { name: 'Sem Categoria', total: 0 };
+    const receitasBills = monthBills.filter(b => b.type === 'receita');
+    const despesasBills = monthBills.filter(b => b.type === 'despesa' || !b.type);
+
+    const totalRec = receitasBills.reduce((acc, b) => acc + Number(b.amount), 0);
+    const totalDesp = despesasBills.reduce((acc, b) => acc + Number(b.amount), 0);
+    const liquido = totalRec - totalDesp;
+
+    const despesasPorCategoria = {};
+    categories.forEach(c => {
+      despesasPorCategoria[c.id] = { name: c.name, total: 0 };
+    });
+
+    despesasBills.forEach(b => {
+      if (b.category_id && despesasPorCategoria[b.category_id]) {
+        despesasPorCategoria[b.category_id].total += Number(b.amount);
+      } else {
+        if (!despesasPorCategoria['sem_categoria']) {
+          despesasPorCategoria['sem_categoria'] = { name: 'Sem Categoria', total: 0 };
+        }
+        despesasPorCategoria['sem_categoria'].total += Number(b.amount);
       }
-      despesasPorCategoria['sem_categoria'].total += Number(b.amount);
-    }
-  });
+    });
 
-  const despesasOrdenadas = Object.values(despesasPorCategoria)
-    .filter(c => c.total > 0)
-    .sort((a, b) => b.total - a.total);
+    const ordenadas = Object.values(despesasPorCategoria)
+      .filter(c => c.total > 0)
+      .sort((a, b) => b.total - a.total);
+
+    return {
+      totalReceitas: totalRec,
+      totalDespesas: totalDesp,
+      resultadoLiquido: liquido,
+      despesasOrdenadas: ordenadas
+    };
+  }, [bills, categories, currentMonthPrefix]);
 
   return (
     <div className="glass-panel" style={{ padding: '2rem', borderRadius: 'var(--radius-lg)', maxWidth: '800px', margin: '0 auto' }}>
@@ -57,7 +72,7 @@ export default function DreView() {
           </h4>
           
           {despesasOrdenadas.length === 0 ? (
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Nenhuma despesa registrada.</p>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Nenhuma despesa registrada neste mês.</p>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
               {despesasOrdenadas.map((cat, idx) => (

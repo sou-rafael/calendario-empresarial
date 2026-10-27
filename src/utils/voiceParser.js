@@ -6,7 +6,7 @@ import { format, addDays, nextMonday, nextTuesday, nextWednesday, nextThursday, 
 export function parseVoiceExpense(text, availableCategories = []) {
   if (!text || typeof text !== 'string') return null;
 
-  const originalText = text.trim();
+  const originalText = text.trim().slice(0, 300);
   const lower = originalText.toLowerCase();
   const now = new Date();
 
@@ -154,7 +154,7 @@ export function parseVoiceExpense(text, availableCategories = []) {
   }
 
   // Capitaliza a primeira letra
-  finalDesc = finalDesc.charAt(0).toUpperCase() + finalDesc.slice(1);
+  finalDesc = (finalDesc.charAt(0).toUpperCase() + finalDesc.slice(1)).slice(0, 120);
 
   return {
     rawText: originalText,

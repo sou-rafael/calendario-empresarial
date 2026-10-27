@@ -61,7 +61,7 @@ export default function Layout() {
 
   const fetchCategories = async () => {
     if (!user) return;
-    const { data } = await supabase.from('categories').select('*').eq('context', currentContext);
+    const { data } = await supabase.from('categories').select('*').eq('user_id', user.id).eq('context', currentContext);
     
     if (data && data.length === 0) {
       const defaults = currentContext === 'empresarial' ? [
@@ -83,7 +83,7 @@ export default function Layout() {
         { user_id: user.id, name: 'Lazer', context: currentContext }
       ];
       await supabase.from('categories').insert(defaults);
-      const { data: newData } = await supabase.from('categories').select('*').eq('context', currentContext);
+      const { data: newData } = await supabase.from('categories').select('*').eq('user_id', user.id).eq('context', currentContext);
       setCategories(newData || []);
     } else {
       setCategories(data || []);
@@ -91,13 +91,15 @@ export default function Layout() {
   };
 
   const fetchBills = async () => {
-    // Buscar contas do mês atual (um pouco antes e depois para cobrir a grade inteira)
+    if (!user) return;
+    // Buscar contas do mês atual (um pouco antes e depois para cobrir a grade inteira e próximos 7 dias)
     const start = format(startOfWeek(startOfMonth(currentDate)), 'yyyy-MM-dd');
-    const end = format(endOfWeek(endOfMonth(currentDate)), 'yyyy-MM-dd');
+    const end = format(addDays(endOfWeek(endOfMonth(currentDate)), 7), 'yyyy-MM-dd');
     
     const { data } = await supabase
       .from('bills')
       .select('*')
+      .eq('user_id', user.id)
       .eq('context', currentContext)
       .gte('date', start)
       .lte('date', end);
@@ -407,7 +409,7 @@ export default function Layout() {
       </header>
 
       <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
-        <Outlet context={{ bills, categories, currentDate, currentContext, setCurrentDate, selectedDate, setSelectedDate, filterCategoryId, setFilterCategoryId, setIsBillModalOpen, setBillToEdit, fetchBills }} />
+        <Outlet context={{ user, bills, categories, currentDate, currentContext, setCurrentDate, selectedDate, setSelectedDate, filterCategoryId, setFilterCategoryId, setIsBillModalOpen, setBillToEdit, fetchBills }} />
       </main>
       </div>
 

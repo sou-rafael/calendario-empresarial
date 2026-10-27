@@ -172,16 +172,19 @@ calendario_empresarial/
 ## 5. Esquema do Banco de Dados (Supabase PostgreSQL)
 
 ### Tabela `bills` (Contas a Pagar / Receber)
-* `id` (`uuid`, Primary Key, default `gen_random_uuid()`)
-* `user_id` (`uuid`, Foreign Key `auth.users(id)`)
+* `id` (`uuid`, Primary Key, default `uuid_generate_v4()`)
+* `user_id` (`uuid`, Foreign Key `auth.users(id)`, default `auth.uid()`)
 * `description` (`text`, Not Null) — Descrição ou razão social do fornecedor.
-* `amount` (`numeric(10,2)`, Not Null) — Valor nominal do título.
+* `amount` (`numeric(12,2)`, Not Null) — Valor nominal do título.
 * `date` (`date`, Not Null) — Data de vencimento.
 * `type` (`text`, check `type in ('despesa', 'receita')`) — Padrão `'despesa'`.
-* `category_id` (`uuid`, Foreign Key `categories(id)`, Nullable)
-* `status` (`text`, check `status in ('pendente', 'pago')`) — Padrão `'pendente'`.
+* `context` (`text`, check `context in ('empresarial', 'pessoal')`) — Padrão `'empresarial'`.
+* `category_id` (`uuid`, Foreign Key `categories(id)`, Nullable) — Validado por RLS para pertencer ao mesmo `user_id`.
+* `status` (`text`, check `status in ('Pendente', 'Pago')`) — Padrão `'Pendente'`.
 * `barcode` (`text`, Nullable) — Linha digitável ou código de barras de 47/48 dígitos.
-* `attachment_url` (`text`, Nullable) — Link para o arquivo original no Storage.
+* `file_url` (`text`, Nullable) — Caminho relativo do objeto no bucket privado `boletos` (aberto via URL assinada de 60s).
+* `file_name` (`text`, Nullable) — Nome original do documento enviado.
+* `person` (`text`, Nullable) — Responsável ou beneficiário associado.
 * `created_at` (`timestamp with time zone`, default `now()`)
 
 ### Tabela `categories` (Categorias de Despesa/Receita)

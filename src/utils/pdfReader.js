@@ -1,27 +1,13 @@
 import { parseBoleto } from './boletoParser';
 
 /**
- * Carrega a biblioteca PDF.js via CDN sob demanda se ainda não estiver carregada na janela
+ * Carrega a biblioteca PDF.js empacotada localmente sob demanda (Code Splitting seguro)
  */
 async function loadPdfJs() {
-  if (window.pdfjsLib) {
-    return window.pdfjsLib;
-  }
-
-  return new Promise((resolve, reject) => {
-    const script = document.createElement('script');
-    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
-    script.onload = () => {
-      if (window.pdfjsLib) {
-        window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-        resolve(window.pdfjsLib);
-      } else {
-        reject(new Error('PDF.js não encontrado após carregar o script'));
-      }
-    };
-    script.onerror = () => reject(new Error('Falha ao carregar script do PDF.js via CDN'));
-    document.head.appendChild(script);
-  });
+  const pdfjsLib = await import('pdfjs-dist');
+  const workerModule = await import('pdfjs-dist/build/pdf.worker.min.mjs?url');
+  pdfjsLib.GlobalWorkerOptions.workerSrc = workerModule.default;
+  return pdfjsLib;
 }
 
 /**
@@ -80,18 +66,23 @@ export function findBarcodeInText(text) {
 }
 
 /**
- * Lê um arquivo PDF e extrai todo o texto de todas as páginas.
+ * Lê um arquivo PDF e extrai todo o texto de todas as páginas com segurança reforçada.
  * Retorna o texto e, se encontrada, a linha digitável já decodificada.
  */
 export async function extractBoletoFromPdf(file) {
   try {
     const pdfjsLib = await loadPdfJs();
     const arrayBuffer = await file.arrayBuffer();
-    const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+    // isEvalSupported: false mitiga vetores de execução de script (CVE-2024-4367)
+    const loadingTask = pdfjsLib.getDocument({
+      data: arrayBuffer,
+      isEvalSupported: false
+    });
     const pdf = await loadingTask.promise;
 
     let fullText = '';
-    for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+    const maxPages = Math.min(pdf.numPages, 15); // Evita DoS com PDFs gigantes
+    for (let pageNum = 1; pageNum <= maxPages; pageNum++) {
       const page = await pdf.getPage(pageNum);
       const content = await page.getTextContent();
       const strings = content.items.map(item => item.str);

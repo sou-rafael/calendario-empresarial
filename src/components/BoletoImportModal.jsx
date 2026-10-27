@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { supabase } from '../lib/supabase';
+import { uploadBoletoFile } from '../lib/storage';
 import { X, UploadCloud, FileText, CheckCircle2, AlertCircle, Copy, Check, Loader2 } from 'lucide-react';
 import { parseBoleto } from '../utils/boletoParser';
 import { extractBoletoFromPdf } from '../utils/pdfReader';
@@ -86,24 +87,11 @@ export default function BoletoImportModal({ isOpen, onClose, user, categories, o
     let originalFileName = null;
 
     try {
-      // 1. Upload do Arquivo (PDF ou Imagem) para o Supabase Storage se houver
+      // 1. Upload seguro do Arquivo (PDF ou Imagem) para o Supabase Storage se houver
       if (file) {
-        originalFileName = file.name;
-        const fileExt = file.name.split('.').pop();
-        const filePath = `${user.id}/${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
-
-        const { error: uploadError } = await supabase.storage
-          .from('boletos')
-          .upload(filePath, file, { cacheControl: '3600', upsert: false });
-
-        if (uploadError) throw uploadError;
-
-        // Recuperar a URL pública do arquivo
-        const { data: publicUrlData } = supabase.storage
-          .from('boletos')
-          .getPublicUrl(filePath);
-
-        uploadedFileUrl = publicUrlData?.publicUrl || null;
+        const uploaded = await uploadBoletoFile(file, user.id);
+        uploadedFileUrl = uploaded.filePath;
+        originalFileName = uploaded.fileName;
       }
 
       // 2. Gravação do registro na tabela 'bills'

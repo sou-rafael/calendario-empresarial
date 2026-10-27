@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../components/AuthProvider';
 import { supabase } from '../lib/supabase';
+import { openBoletoAttachment } from '../lib/storage';
 import { 
   Mic, UploadCloud, Copy, Check, ExternalLink, Calendar as CalendarIcon, 
   MessageSquare, Briefcase, User, ChevronRight, AlertCircle, Sparkles, Monitor, Sun, Moon, Square, Lightbulb, Bell, BellOff, BellRing
 } from 'lucide-react';
-import { format, isAfter, isToday, parseISO, addDays } from 'date-fns';
+import { format, isAfter, isToday, parseISO, addDays, subDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
 import BoletoImportModal from '../components/BoletoImportModal';
@@ -652,10 +653,9 @@ export default function MobilePocket() {
                         )}
 
                         {bill.file_url && (
-                          <a
-                            href={bill.file_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
+                          <button
+                            type="button"
+                            onClick={() => openBoletoAttachment(bill.file_url)}
                             style={{
                               background: 'rgba(52, 211, 153, 0.12)',
                               border: '1px solid rgba(52, 211, 153, 0.3)',
@@ -664,7 +664,7 @@ export default function MobilePocket() {
                               padding: '6px 10px',
                               fontSize: '0.72rem',
                               fontWeight: 700,
-                              textDecoration: 'none',
+                              cursor: 'pointer',
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'center',
@@ -673,7 +673,7 @@ export default function MobilePocket() {
                           >
                             <ExternalLink size={12} />
                             <span>PDF</span>
-                          </a>
+                          </button>
                         )}
                       </div>
                     </div>

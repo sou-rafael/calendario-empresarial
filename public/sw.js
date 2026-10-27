@@ -1,16 +1,12 @@
-// Service Worker nativo para KdConta PWA com suporte a Web Push Notifications
-const CACHE_NAME = 'kdconta-v1';
+// Service Worker nativo para KdConta PWA com suporte a Notificações
+const CACHE_NAME = 'kdconta-v2';
 
-self.addEventListener('install', (event) => {
+self.addEventListener('install', () => {
   self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(self.clients.claim());
-});
-
-self.addEventListener('fetch', (event) => {
-  event.respondWith(fetch(event.request).catch(() => caches.match(event.request)));
 });
 
 // Listener de Web Push do Navegador
@@ -27,7 +23,7 @@ self.addEventListener('push', (event) => {
     try {
       const payload = event.data.json();
       data = { ...data, ...payload };
-    } catch (e) {
+    } catch {
       data.body = event.data.text();
     }
   }
@@ -54,14 +50,14 @@ self.addEventListener('notificationclick', (event) => {
   const targetUrl = event.notification.data?.url || '/mobile';
 
   event.waitUntil(
-    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
       for (const client of clientList) {
         if (client.url.includes('/mobile') && 'focus' in client) {
           return client.focus();
         }
       }
-      if (clients.openWindow) {
-        return clients.openWindow(targetUrl);
+      if (self.clients.openWindow) {
+        return self.clients.openWindow(targetUrl);
       }
     })
   );
