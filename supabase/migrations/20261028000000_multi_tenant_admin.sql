@@ -155,7 +155,7 @@ ALTER TABLE public.tenant_profiles ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "tenant_profiles_select_own_or_admin" ON public.tenant_profiles;
 CREATE POLICY "tenant_profiles_select_own_or_admin" ON public.tenant_profiles
 FOR SELECT USING (
-  auth.uid() = id OR public.is_super_admin()
+  auth.uid() = id
 );
 
 DROP POLICY IF EXISTS "tenant_profiles_update_super_admin" ON public.tenant_profiles;
