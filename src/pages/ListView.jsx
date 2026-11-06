@@ -1,10 +1,12 @@
 import React from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { format, isBefore, startOfDay } from 'date-fns';
-import { Edit2 } from 'lucide-react';
+import { Edit2, Repeat } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { useToast } from '../components/Toast';
 
 export default function ListView() {
+  const toast = useToast();
   const { bills, currentContext, filterCategoryId, categories, setSelectedDate, setIsBillModalOpen, setBillToEdit, fetchBills } = useOutletContext();
 
   const filteredBills = filterCategoryId 
@@ -18,9 +20,10 @@ export default function ListView() {
     try {
       const { error } = await supabase.from('bills').update({ status: newStatus }).eq('id', id);
       if (error) throw error;
+      toast.success(newStatus === 'Pago' ? 'Conta marcada como Paga!' : 'Conta reaberta como Pendente.');
       fetchBills();
     } catch (err) {
-      alert('Erro ao atualizar status: ' + err.message);
+      toast.error('Erro ao atualizar status: ' + err.message);
     }
   };
 
@@ -50,6 +53,7 @@ export default function ListView() {
                 const isReceita = bill.type === 'receita';
                 const categoryName = categories.find(c => c.id === bill.category_id)?.name;
                 const entityName = isReceita ? (bill.person || 'Receita') : (categoryName || '-');
+                const hasRecurrence = Boolean(bill.recurrence_id || bill.is_recurring);
                 
                 return (
                   <tr 
@@ -62,7 +66,14 @@ export default function ListView() {
                       {format(new Date(bill.date + 'T00:00:00'), 'dd/MM/yyyy')}
                     </td>
                     <td style={{ padding: '1rem', color: 'var(--text-primary)', fontWeight: 500 }}>
-                      {bill.description}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span>{bill.description}</span>
+                        {hasRecurrence && (
+                          <span title="Lançamento Recorrente / Parcelado" style={{ display: 'inline-flex', alignItems: 'center', color: 'var(--accent-primary)', fontSize: '0.72rem' }}>
+                            <Repeat size={12} />
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td style={{ padding: '1rem', color: 'var(--text-secondary)' }}>
                       <span style={{ 

@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { uploadBoletoFile, openBoletoAttachment, deleteBoletoAttachment } from '../lib/storage';
-import { X, Check, Copy, FileText, ExternalLink, Paperclip } from 'lucide-react';
+import { X, Check, Copy, ExternalLink, Paperclip, Repeat, Calendar } from 'lucide-react';
 import CustomSelect from './CustomSelect';
-import { format } from 'date-fns';
+import { format, addMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { useToast } from './Toast';
 
 export default function BillModal({ isOpen, onClose, selectedDate, user, categories, bills = [], onBillSaved }) {
+  const toast = useToast();
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
   const [categoryId, setCategoryId] = useState('');
@@ -14,6 +16,11 @@ export default function BillModal({ isOpen, onClose, selectedDate, user, categor
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [copiedId, setCopiedId] = useState(null);
+
+  // Estados de Recorrência / Parcelamento
+  const [isRecurring, setIsRecurring] = useState(false);
+  const [recurrenceType, setRecurrenceType] = useState('monthly'); // 'monthly' | 'installment'
+  const [recurrenceCount, setRecurrenceCount] = useState(12);
 
   if (!isOpen) return null;
 
@@ -24,7 +31,10 @@ export default function BillModal({ isOpen, onClose, selectedDate, user, categor
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!description || !amount || !categoryId) return;
+    if (!description || !amount || !categoryId) {
+      toast.warning('Preencha os campos obrigatórios: Nome, Categoria e Valor.');
+      return;
+    }
     setLoading(true);
 
     try {
@@ -37,49 +47,127 @@ export default function BillModal({ isOpen, onClose, selectedDate, user, categor
         originalFileName = uploaded.fileName;
       }
 
-      const { error } = await supabase.from('bills').insert([
-        {
+      const parsedAmount = parseFloat(amount);
+      const totalInstances = isRecurring ? Math.max(2, Math.min(60, parseInt(recurrenceCount, 10) || 12)) : 1;
+      const recurrenceId = isRecurring ? (crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}_rec`) : null;
+
+      const billsToInsert = [];
+
+      for (let i = 0; i < totalInstances; i++) {
+        const instanceDate = format(addMonths(selectedDate, i), 'yyyy-MM-dd');
+        let instanceDesc = description.trim();
+
+        if (isRecurring) {
+          if (recurrenceType === 'installment') {
+            instanceDesc = `${instanceDesc} (${i + 1}/${totalInstances})`;
+          }
+        }
+
+        billsToInsert.push({
           user_id: user.id,
-          date: dateString,
-          description,
-          amount: parseFloat(amount),
+          date: instanceDate,
+          description: instanceDesc,
+          amount: parsedAmount,
           category_id: categoryId,
           status: 'Pendente',
           barcode: barcode.trim() || null,
-          file_url: uploadedFileUrl,
-          file_name: originalFileName
-        }
-      ]);
+          file_url: i === 0 ? uploadedFileUrl : null, // anexo fica na 1ª parcela
+          file_name: i === 0 ? originalFileName : null,
+          recurrence_id: recurrenceId,
+          is_recurring: isRecurring,
+          installment_current: isRecurring && recurrenceType === 'installment' ? i + 1 : null,
+          installment_total: isRecurring && recurrenceType === 'installment' ? totalInstances : null
+        });
+      }
 
-      if (error) throw error;
-      
+      // Tenta inserir com campos de recorrência
+      let { error } = await supabase.from('bills').insert(billsToInsert);
+
+      // Fallback defensivo: se a migration 003 ainda não tiver sido rodada no banco
+      if (error && (error.message?.includes('recurrence_id') || error.message?.includes('installment'))) {
+        const sanitizedBills = billsToInsert.map(b => {
+          const { recurrence_id, is_recurring, installment_current, installment_total, ...rest } = b;
+          return rest;
+        });
+        const retryResult = await supabase.from('bills').insert(sanitizedBills);
+        if (retryResult.error) throw retryResult.error;
+      } else if (error) {
+        throw error;
+      }
+
+      toast.success(
+        isRecurring
+          ? `${totalInstances} lançamentos ${recurrenceType === 'installment' ? 'parcelados' : 'recorrentes'} criados!`
+          : 'Lançamento salvo com sucesso!'
+      );
+
       setDescription('');
       setAmount('');
       setCategoryId('');
       setBarcode('');
       setFile(null);
+      setIsRecurring(false);
+      setRecurrenceCount(12);
       onBillSaved();
     } catch (error) {
-      alert('Erro ao salvar conta: ' + error.message);
+      toast.error('Erro ao salvar conta: ' + error.message);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDelete = async (bill) => {
-    if (!window.confirm(`Deseja realmente excluir o lançamento "${bill.description}"?`)) {
-      return;
-    }
+  const executeDelete = async (bill, deleteAllFuture = false) => {
     try {
-      const { error } = await supabase.from('bills').delete().eq('id', bill.id).eq('user_id', user.id);
+      let query = supabase.from('bills').delete().eq('user_id', user.id);
+
+      if (deleteAllFuture && bill.recurrence_id) {
+        query = query.eq('recurrence_id', bill.recurrence_id).gte('date', bill.date);
+      } else {
+        query = query.eq('id', bill.id);
+      }
+
+      const { error } = await query;
       if (error) throw error;
+
       if (bill.file_url) {
         await deleteBoletoAttachment(bill.file_url);
       }
+
+      toast.success(deleteAllFuture ? 'Lançamento e parcelas futuras removidos!' : 'Lançamento removido!');
       onBillSaved();
     } catch (error) {
-      alert('Erro ao excluir conta: ' + error.message);
+      toast.error('Erro ao excluir: ' + error.message);
     }
+  };
+
+  const handleDelete = (bill) => {
+    if (bill.recurrence_id || bill.is_recurring) {
+      toast.confirm({
+        title: 'Excluir Conta Recorrente / Parcelada',
+        message: `O lançamento "${bill.description}" faz parte de uma série recorrente. Como deseja proceder?`,
+        extraOptions: [
+          {
+            label: 'Excluir APENAS este mês',
+            className: 'btn btn-outline',
+            action: () => executeDelete(bill, false)
+          },
+          {
+            label: 'Excluir ESTE e todos os meses futuros',
+            className: 'btn',
+            action: () => executeDelete(bill, true)
+          }
+        ]
+      });
+      return;
+    }
+
+    toast.confirm({
+      title: 'Excluir Lançamento',
+      message: `Deseja realmente excluir "${bill.description}"? Esta ação não pode ser desfeita.`,
+      confirmText: 'Excluir Conta',
+      isDanger: true,
+      onConfirm: () => executeDelete(bill, false)
+    });
   };
 
   const handleToggleStatus = async (id, currentStatus) => {
@@ -87,9 +175,10 @@ export default function BillModal({ isOpen, onClose, selectedDate, user, categor
     try {
       const { error } = await supabase.from('bills').update({ status: newStatus }).eq('id', id);
       if (error) throw error;
+      toast.success(newStatus === 'Pago' ? 'Conta baixada como paga!' : 'Conta reaberta como pendente.');
       onBillSaved();
     } catch (error) {
-      alert('Erro ao alterar status da conta: ' + error.message);
+      toast.error('Erro ao alterar status: ' + error.message);
     }
   };
 
@@ -97,6 +186,7 @@ export default function BillModal({ isOpen, onClose, selectedDate, user, categor
     if (!code) return;
     navigator.clipboard.writeText(code.replace(/[^0-9]/g, ''));
     setCopiedId(id);
+    toast.info('Código de barras copiado!');
     setTimeout(() => setCopiedId(null), 2000);
   };
 
@@ -114,12 +204,13 @@ export default function BillModal({ isOpen, onClose, selectedDate, user, categor
         background: 'var(--modal-bg)',
         border: '1px solid var(--border-color)',
         borderRadius: '24px',
-        padding: '2rem',
+        padding: '1.75rem',
         position: 'relative',
         boxShadow: 'var(--shadow-lg)',
         display: 'flex',
         flexDirection: 'column',
-        maxHeight: '92vh'
+        maxHeight: '92vh',
+        overflowY: 'auto'
       }}>
         <button 
           onClick={onClose} 
@@ -140,7 +231,7 @@ export default function BillModal({ isOpen, onClose, selectedDate, user, categor
             Contas do Dia
           </span>
           <h2 style={{ 
-            fontSize: '1.75rem', 
+            fontSize: '1.65rem', 
             fontWeight: 900, 
             letterSpacing: '-0.02em', 
             color: 'var(--text-primary)',
@@ -160,6 +251,8 @@ export default function BillModal({ isOpen, onClose, selectedDate, user, categor
           ) : (
             dayBills.map(bill => {
               const isPaid = bill.status === 'Pago';
+              const hasRecurrence = Boolean(bill.recurrence_id || bill.is_recurring);
+
               return (
                 <div key={bill.id} style={{ 
                   background: isPaid ? 'rgba(16, 185, 129, 0.05)' : 'var(--item-bg)',
@@ -178,7 +271,8 @@ export default function BillModal({ isOpen, onClose, selectedDate, user, categor
                         fontSize: '0.95rem',
                         display: 'flex',
                         alignItems: 'center',
-                        gap: '6px'
+                        gap: '6px',
+                        flexWrap: 'wrap'
                       }}>
                         <span style={{ textDecoration: isPaid ? 'line-through' : 'none', opacity: isPaid ? 0.75 : 1 }}>
                           {bill.description}
@@ -188,6 +282,11 @@ export default function BillModal({ isOpen, onClose, selectedDate, user, categor
                             Pago
                           </span>
                         )}
+                        {hasRecurrence && (
+                          <span style={{ fontSize: '0.68rem', color: 'var(--accent-primary)', background: 'rgba(99, 102, 241, 0.12)', padding: '2px 6px', borderRadius: '4px', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                            <Repeat size={10} /> Série
+                          </span>
+                        )}
                       </div>
                       <div style={{ 
                         color: isPaid ? '#10b981' : '#fb7185', 
@@ -195,12 +294,11 @@ export default function BillModal({ isOpen, onClose, selectedDate, user, categor
                         marginTop: '2px', 
                         fontSize: '1.15rem' 
                       }}>
-                        R$ {bill.amount.toFixed(2).replace('.', ',')}
+                        R$ {Number(bill.amount).toFixed(2).replace('.', ',')}
                       </div>
                     </div>
 
                     <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-                      {/* Botão de Baixa Rápida em 1 Clique */}
                       <button
                         type="button"
                         onClick={() => handleToggleStatus(bill.id, bill.status)}
@@ -333,7 +431,7 @@ export default function BillModal({ isOpen, onClose, selectedDate, user, categor
             
             <input 
               type="text" required
-              placeholder="Nome (ex: Aluguel, Energia...)"
+              placeholder="Nome (ex: Aluguel, Energia, Internet...)"
               value={description} onChange={e => setDescription(e.target.value)}
               style={{
                 background: 'var(--input-bg)', border: '1px solid var(--input-border)',
@@ -391,7 +489,7 @@ export default function BillModal({ isOpen, onClose, selectedDate, user, categor
                 whiteSpace: 'nowrap'
               }}>
                 <Paperclip size={14} />
-                {file ? 'Anexado' : 'Anexar PDF'}
+                {file ? 'Anexado' : 'Anexar Boleto'}
                 <input 
                   type="file" 
                   accept=".pdf,image/*" 
@@ -399,6 +497,64 @@ export default function BillModal({ isOpen, onClose, selectedDate, user, categor
                   onChange={(e) => setFile(e.target.files[0] || null)}
                 />
               </label>
+            </div>
+
+            {/* Painel de Recorrência / Parcelamento */}
+            <div style={{
+              background: isRecurring ? 'rgba(99, 102, 241, 0.08)' : 'var(--bg-secondary)',
+              border: isRecurring ? '1px solid rgba(99, 102, 241, 0.35)' : '1px solid var(--border-color)',
+              borderRadius: '12px',
+              padding: '0.75rem 0.9rem',
+              transition: 'all 0.2s'
+            }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', margin: 0 }}>
+                <input
+                  type="checkbox"
+                  checked={isRecurring}
+                  onChange={(e) => setIsRecurring(e.target.checked)}
+                  style={{ accentColor: '#6366f1' }}
+                />
+                <span style={{ fontSize: '0.84rem', fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Repeat size={14} color="var(--accent-primary)" />
+                  Repetir lançamento (Fixa todo mês ou Parcelamento)
+                </span>
+              </label>
+
+              {isRecurring && (
+                <div style={{ marginTop: '0.65rem', display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+                  <select
+                    className="input-field"
+                    value={recurrenceType}
+                    onChange={(e) => setRecurrenceType(e.target.value)}
+                    style={{ flex: '1 1 140px', padding: '0.45rem 0.6rem', fontSize: '0.8rem' }}
+                  >
+                    <option value="monthly">Fixa Todo Mês</option>
+                    <option value="installment">Compra Parcelada (ex: 12x)</option>
+                  </select>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>Repetir por:</span>
+                    <input
+                      type="number"
+                      min="2"
+                      max="60"
+                      value={recurrenceCount}
+                      onChange={(e) => setRecurrenceCount(e.target.value)}
+                      style={{
+                        width: '65px',
+                        background: 'var(--input-bg)',
+                        border: '1px solid var(--input-border)',
+                        color: 'var(--text-primary)',
+                        padding: '0.45rem',
+                        borderRadius: '8px',
+                        fontSize: '0.82rem',
+                        textAlign: 'center'
+                      }}
+                    />
+                    <span style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>meses</span>
+                  </div>
+                </div>
+              )}
             </div>
 
             <button 
@@ -418,7 +574,7 @@ export default function BillModal({ isOpen, onClose, selectedDate, user, categor
                 opacity: loading ? 0.7 : 1
               }}
             >
-              <Check size={18} strokeWidth={3} /> {loading ? 'Salvando...' : 'Salvar'}
+              <Check size={18} strokeWidth={3} /> {loading ? 'Salvando...' : isRecurring ? `Salvar ${recurrenceCount} Lançamentos` : 'Salvar'}
             </button>
           </form>
         </div>

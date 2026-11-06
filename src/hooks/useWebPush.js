@@ -21,7 +21,7 @@ export function useWebPush(user, bills = []) {
    */
   const requestPermission = async () => {
     if (!isSupported) {
-      alert('Notificações não são suportadas neste navegador.');
+      console.warn('Notificações não são suportadas neste navegador.');
       return false;
     }
 

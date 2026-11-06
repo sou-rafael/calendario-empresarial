@@ -7,8 +7,10 @@ import {
 } from 'lucide-react';
 import { PLAN_CONFIG, STATUS_CONFIG, fetchTenantsOverview, updateTenantAccess } from './adminService';
 import AdminTenantModal from './AdminTenantModal';
+import { useToast } from '../../components/Toast';
 
 export default function AdminPage() {
+  const toast = useToast();
   const { user, refreshTenantProfile } = useAuth();
   const navigate = useNavigate();
 
@@ -161,15 +163,16 @@ export default function AdminPage() {
         basePayload.trial_ends_at = nextDate.toISOString();
       } else if (actionType === 'toggle_suspend') {
         if (tenant.id === user?.id) {
-          alert('Você não pode suspender a sua própria conta de Super Admin.');
+          toast.warning('Você não pode suspender a sua própria conta de Super Admin.');
           return;
         }
         basePayload.account_status = tenant.account_status === 'suspended' ? 'active' : 'suspended';
       }
 
       await handleSaveTenant(basePayload);
+      toast.success('Alteração aplicada com sucesso!');
     } catch (err) {
-      alert('Erro ao executar ação rápida: ' + err.message);
+      toast.error('Erro ao executar ação rápida: ' + err.message);
     }
   };
 

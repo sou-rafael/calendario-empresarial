@@ -4,8 +4,10 @@ import { X, Check, Calendar, Tag, DollarSign, Sparkles } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import CustomSelect from './CustomSelect';
+import { useToast } from './Toast';
 
 export default function VoiceConfirmModal({ isOpen, onClose, parsedData, categories, user, onSuccess }) {
+  const toast = useToast();
   if (!isOpen || !parsedData) return null;
 
   const [description, setDescription] = useState(parsedData.description || '');
@@ -17,7 +19,7 @@ export default function VoiceConfirmModal({ isOpen, onClose, parsedData, categor
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!description || !amount || !dueDate || !categoryId) {
-      alert('Por favor, preencha todos os campos obrigatórios.');
+      toast.warning('Por favor, preencha todos os campos obrigatórios.');
       return;
     }
 
@@ -36,10 +38,11 @@ export default function VoiceConfirmModal({ isOpen, onClose, parsedData, categor
 
       if (error) throw error;
 
+      toast.success('Despesa por voz salva com sucesso!');
       onSuccess();
       onClose();
     } catch (err) {
-      alert('Erro ao salvar compromisso: ' + err.message);
+      toast.error('Erro ao salvar compromisso: ' + err.message);
     } finally {
       setLoading(false);
     }

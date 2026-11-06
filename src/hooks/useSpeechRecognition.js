@@ -65,7 +65,7 @@ export function useSpeechRecognition() {
 
   const startListening = () => {
     if (!isSupported) {
-      alert('Seu navegador não suporta reconhecimento de voz direto. Recomendamos usar o Chrome ou Safari.');
+      setError('Seu navegador não suporta reconhecimento de voz direto. Recomendamos usar o Google Chrome ou Safari.');
       return;
     }
     setTranscript('');

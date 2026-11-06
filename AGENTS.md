@@ -148,12 +148,13 @@ calendario_empresarial/
 │   │   ├── MobileChatView.jsx  # Chat do Assistente KdConta (Em breve)
 │   │   ├── ProtectedRoute.jsx  # Guarda de rotas autenticadas
 │   │   ├── Sidebar.jsx         # Menu lateral de navegação desktop
+│   │   ├── Toast.jsx           # Sistema nativo de toasts e confirmações modernas
 │   │   └── VoiceConfirmModal.jsx # Modal de confirmação do comando de voz
 │   ├── hooks/
 │   │   ├── useSpeechRecognition.js # Hook para Web Speech API
 │   │   └── useWebPush.js       # Hook para notificações locais PWA
 │   ├── lib/
-│   │   ├── storage.js          # Upload validado, URLs assinadas (60s) e exclusão no bucket 'boletos'
+│   │   ├── storage.js          # Upload validado com compressão automática, URLs assinadas e exclusão no bucket
 │   │   └── supabase.js         # Instância inicializada do Supabase Client
 │   ├── modules/
 │   │   └── admin/              # Módulo Backoffice Multi-Tenant 100% isolado (plug-and-play)
@@ -172,6 +173,7 @@ calendario_empresarial/
 │   ├── utils/
 │   │   ├── boletoParser.js     # Decodificador de linhas digitáveis e códigos FEBRABAN
 │   │   ├── consultorEngine.js  # Motor determinístico de consultas financeiras
+│   │   ├── imageCompressor.js  # Compressão e redimensionamento automático de fotos no navegador
 │   │   ├── pdfReader.js        # Extrator local de PDF (pdfjs-dist com isEvalSupported: false)
 │   │   └── voiceParser.js      # Parser heurístico de transcrição de voz
 │   ├── App.jsx                 # Rotas com Code Splitting (React.lazy) e multi-domínio
@@ -180,7 +182,8 @@ calendario_empresarial/
 ├── supabase/
 │   └── migrations/
 │       ├── 20261027000000_security_hardening.sql # Migration 001: tabelas, índices, RLS e Storage privado
-│       └── 20261028000000_multi_tenant_admin.sql # Migration 002: tenant_profiles, triggers e RPCs do Backoffice Admin
+│       ├── 20261028000000_multi_tenant_admin.sql # Migration 002: tenant_profiles, triggers e RPCs do Backoffice Admin
+│       └── 20261106000000_recurring_bills.sql    # Migration 003: suporte a contas recorrentes e parceladas
 ├── AGENTS.md                   # Este documento de referência
 ├── README.md                   # Guia rápido do repositório
 ├── package.json
@@ -208,6 +211,10 @@ calendario_empresarial/
 * `file_url` (`text`, Nullable) — Caminho relativo do objeto no bucket privado `boletos` (ex: `user_id/uuid.pdf`), aberto sob demanda via URL assinada de 60s.
 * `file_name` (`text`, Nullable) — Nome original do documento enviado.
 * `person` (`text`, Nullable) — Responsável ou beneficiário associado.
+* `recurrence_id` (`uuid`, Nullable) — Identificador único da série recorrente ou parcelamento.
+* `is_recurring` (`boolean`, default `false`) — Indica se o lançamento faz parte de uma série mensal/parcelada.
+* `installment_current` (`integer`, Nullable) — Número da parcela atual (ex: 1).
+* `installment_total` (`integer`, Nullable) — Total de parcelas da série (ex: 12).
 * `created_at` (`timestamp with time zone`, default `timezone('utc', now())`)
 
 ### Tabela `categories` (Categorias de Despesa/Receita)
@@ -278,6 +285,12 @@ calendario_empresarial/
   * Criação da migration [`20261027000000_security_hardening.sql`](file:///c:/Users/rsf_o/OneDrive/Documentos/PROJETOS_WEB/calendario_empresarial/supabase/migrations/20261027000000_security_hardening.sql) e do módulo [`src/lib/storage.js`](file:///c:/Users/rsf_o/OneDrive/Documentos/PROJETOS_WEB/calendario_empresarial/src/lib/storage.js) com bucket privado e URLs assinadas de 60s.
   * Correção do cálculo do DRE ([`DreView.jsx`](file:///c:/Users/rsf_o/OneDrive/Documentos/PROJETOS_WEB/calendario_empresarial/src/pages/DreView.jsx)) para filtrar estritamente os lançamentos do mês selecionado.
   * Implementação de Code Splitting com `React.lazy` em [`src/App.jsx`](file:///c:/Users/rsf_o/OneDrive/Documentos/PROJETOS_WEB/calendario_empresarial/src/App.jsx) e cabeçalhos HTTP de segurança em [`vercel.json`](file:///c:/Users/rsf_o/OneDrive/Documentos/PROJETOS_WEB/calendario_empresarial/vercel.json).
+* **Fase 4 — Contas Recorrentes, Sistema de Toasts e Compressão Automática de Imagens:**
+  * Implementação de suporte a contas recorrentes e parceladas (mensal fixa e parcelamento até 60x) com badges visuais e exclusão em lote da série.
+  * Substituição completa de todos os 16 `alert()` e `window.confirm()` por sistema nativo de toasts reativos e modais de confirmação modernos ([`src/components/Toast.jsx`](file:///c:/Users/rsf_o/OneDrive/Documentos/PROJETOS_WEB/calendario_empresarial/src/components/Toast.jsx)).
+  * Compressão automática de fotos de câmeras de celular no navegador antes do upload para o Storage ([`src/utils/imageCompressor.js`](file:///c:/Users/rsf_o/OneDrive/Documentos/PROJETOS_WEB/calendario_empresarial/src/utils/imageCompressor.js)), reduzindo arquivos de ~8 MB para ~200 KB sem perda de legibilidade.
+  * Botão de "Nova Conta" manual adicionado diretamente no Modo Bolso ([`src/pages/MobilePocket.jsx`](file:///c:/Users/rsf_o/OneDrive/Documentos/PROJETOS_WEB/calendario_empresarial/src/pages/MobilePocket.jsx)) com toque rápido para edição.
+  * Criação da migration [`supabase/migrations/20261106000000_recurring_bills.sql`](file:///c:/Users/rsf_o/OneDrive/Documentos/PROJETOS_WEB/calendario_empresarial/supabase/migrations/20261106000000_recurring_bills.sql).
 
 ---
 

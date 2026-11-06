@@ -3,11 +3,13 @@
 Plataforma moderna de **Gestão Financeira de Contas a Pagar e Fluxo de Caixa Diário** para pequenas empresas, autônomos e microempreendedores.
 
 ## ✨ Principais Recursos
+- **Contas Recorrentes & Parcelamento:** Lançamento de despesas fixas mensais (aluguel, condomínio, internet) e compras parceladas com geração automática dos meses futuros.
 - **Leitor Inteligente de Boletos (PDF e Câmera):** Extração local de linha digitável (47/48 dígitos FEBRABAN), vencimento e valor via `pdfjs-dist` (`isEvalSupported: false`) com armazenamento privado no Supabase Storage via URLs assinadas de 60 segundos.
+- **Otimização Inteligente de Fotos:** Compressão automática de fotos de comprovantes tiradas no celular (redução de ~8 MB para ~200 KB no próprio navegador).
 - **Lançamento por Comando de Voz:** Fale a despesa naturalmente e agende no calendário com 1 toque.
-- **Calendário Financeiro Mensal:** Semáforo visual (Pago, Pendente, Atrasado) e baixa rápida em 1 clique.
+- **Calendário Financeiro Mensal:** Semáforo visual (Pago, Pendente, Atrasado), baixa rápida em 1 clique e toasts modernos no lugar de alertas do navegador.
 - **DRE Gerencial & Dashboard Analítico:** Demonstração do Resultado do Exercício estritamente filtrada por competência mensal e gráficos interativos em Recharts.
-- **PWA Mobile First ("Modo Bolso"):** Interface adaptada para operação rápida no celular com cópia inteligente de código de barras e janela operacional otimizada.
+- **PWA Mobile First ("Modo Bolso"):** Interface rápida para celular com lançamento manual, leitura de boletos, cópia inteligente de código de barras e janela operacional otimizada.
 
 ## 🔒 Segurança & Arquitetura Multi-Tenant
 - **Row Level Security (RLS):** Isolamento por `auth.uid() = user_id` nas tabelas `bills` e `categories`, incluindo validação cruzada de `category_id` por tenant.
@@ -25,8 +27,10 @@ Plataforma moderna de **Gestão Financeira de Contas a Pagar e Fluxo de Caixa Di
    VITE_SUPABASE_URL=sua_url_do_supabase
    VITE_SUPABASE_ANON_KEY=sua_anon_key_do_supabase
    ```
-3. Aplique a migration de banco de dados e políticas de segurança no SQL Editor do Supabase:
-   - Arquivo: [`supabase/migrations/20261027000000_security_hardening.sql`](./supabase/migrations/20261027000000_security_hardening.sql)
+3. Aplique as migrations no SQL Editor do Supabase (em ordem numérica):
+   - [`supabase/migrations/20261027000000_security_hardening.sql`](./supabase/migrations/20261027000000_security_hardening.sql)
+   - [`supabase/migrations/20261028000000_multi_tenant_admin.sql`](./supabase/migrations/20261028000000_multi_tenant_admin.sql)
+   - [`supabase/migrations/20261106000000_recurring_bills.sql`](./supabase/migrations/20261106000000_recurring_bills.sql)
 4. Inicie o servidor de desenvolvimento:
    ```bash
    npm run dev

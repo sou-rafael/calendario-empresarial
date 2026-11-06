@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { uploadBoletoFile } from '../lib/storage';
-import { X, UploadCloud, FileText, CheckCircle2, AlertCircle, Copy, Check, Loader2 } from 'lucide-react';
+import { X, UploadCloud, FileText, CheckCircle2, AlertCircle, Copy, Check, Loader2, Repeat } from 'lucide-react';
 import { parseBoleto } from '../utils/boletoParser';
 import { extractBoletoFromPdf } from '../utils/pdfReader';
 import CustomSelect from './CustomSelect';
+import { format, addMonths, parseISO } from 'date-fns';
+import { useToast } from './Toast';
 
 export default function BoletoImportModal({ isOpen, onClose, user, categories, onImportSuccess }) {
+  const toast = useToast();
   const [barcodeInput, setBarcodeInput] = useState('');
   const [description, setDescription] = useState('');
   const [dueDate, setDueDate] = useState('');
@@ -18,6 +21,10 @@ export default function BoletoImportModal({ isOpen, onClose, user, categories, o
   const [parsedInfo, setParsedInfo] = useState(null);
   const [parseError, setParseError] = useState('');
   const [copied, setCopied] = useState(false);
+
+  // Recorrência
+  const [isRecurring, setIsRecurring] = useState(false);
+  const [recurrenceCount, setRecurrenceCount] = useState(12);
 
   if (!isOpen) return null;
 
@@ -78,7 +85,7 @@ export default function BoletoImportModal({ isOpen, onClose, user, categories, o
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!description || !amount || !dueDate || !categoryId) {
-      alert('Por favor, preencha todos os campos obrigatórios.');
+      toast.warning('Por favor, preencha todos os campos obrigatórios.');
       return;
     }
 
@@ -94,22 +101,50 @@ export default function BoletoImportModal({ isOpen, onClose, user, categories, o
         originalFileName = uploaded.fileName;
       }
 
-      // 2. Gravação do registro na tabela 'bills'
-      const { error: insertError } = await supabase.from('bills').insert([
-        {
+      const parsedAmount = parseFloat(amount);
+      const totalInstances = isRecurring ? Math.max(2, Math.min(60, parseInt(recurrenceCount, 10) || 12)) : 1;
+      const recurrenceId = isRecurring ? (crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}_rec`) : null;
+      const baseDate = parseISO(dueDate);
+
+      const billsToInsert = [];
+
+      for (let i = 0; i < totalInstances; i++) {
+        const instanceDate = format(addMonths(baseDate, i), 'yyyy-MM-dd');
+        billsToInsert.push({
           user_id: user.id,
-          date: dueDate,
-          description,
-          amount: parseFloat(amount),
+          date: instanceDate,
+          description: description.trim(),
+          amount: parsedAmount,
           category_id: categoryId,
           status: 'Pendente',
           barcode: barcodeInput.trim() || null,
-          file_url: uploadedFileUrl,
-          file_name: originalFileName
-        }
-      ]);
+          file_url: i === 0 ? uploadedFileUrl : null,
+          file_name: i === 0 ? originalFileName : null,
+          recurrence_id: recurrenceId,
+          is_recurring: isRecurring
+        });
+      }
 
-      if (insertError) throw insertError;
+      // 2. Gravação do registro na tabela 'bills'
+      let { error: insertError } = await supabase.from('bills').insert(billsToInsert);
+
+      // Fallback defensivo caso a migration 003 não tenha rodado
+      if (insertError && insertError.message?.includes('recurrence_id')) {
+        const sanitized = billsToInsert.map(b => {
+          const { recurrence_id, is_recurring, ...rest } = b;
+          return rest;
+        });
+        const retry = await supabase.from('bills').insert(sanitized);
+        if (retry.error) throw retry.error;
+      } else if (insertError) {
+        throw insertError;
+      }
+
+      toast.success(
+        isRecurring
+          ? `${totalInstances} boletos recorrentes lançados no calendário!`
+          : 'Boleto importado e lançado com sucesso!'
+      );
 
       // Limpar formulário e fechar
       setBarcodeInput('');
@@ -119,10 +154,12 @@ export default function BoletoImportModal({ isOpen, onClose, user, categories, o
       setCategoryId('');
       setFile(null);
       setParsedInfo(null);
+      setIsRecurring(false);
+      setRecurrenceCount(12);
       onImportSuccess();
       onClose();
     } catch (err) {
-      alert('Erro ao importar boleto: ' + err.message);
+      toast.error('Erro ao importar boleto: ' + err.message);
     } finally {
       setFileUploading(false);
     }
@@ -132,6 +169,7 @@ export default function BoletoImportModal({ isOpen, onClose, user, categories, o
     if (!barcodeInput) return;
     navigator.clipboard.writeText(barcodeInput.replace(/[^0-9]/g, ''));
     setCopied(true);
+    toast.info('Código de barras copiado!');
     setTimeout(() => setCopied(false), 2000);
   };
 
@@ -372,6 +410,52 @@ export default function BoletoImportModal({ isOpen, onClose, user, categories, o
               placeholder="Selecione uma categoria..."
               required
             />
+          </div>
+
+          {/* Opção de Boleto Mensal Fixo (Recorrência) */}
+          <div style={{
+            background: isRecurring ? 'rgba(99, 102, 241, 0.08)' : 'var(--bg-secondary)',
+            border: isRecurring ? '1px solid rgba(99, 102, 241, 0.35)' : '1px solid var(--border-color)',
+            borderRadius: '12px',
+            padding: '0.75rem 0.9rem',
+            transition: 'all 0.2s'
+          }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', margin: 0 }}>
+              <input
+                type="checkbox"
+                checked={isRecurring}
+                onChange={(e) => setIsRecurring(e.target.checked)}
+                style={{ accentColor: '#6366f1' }}
+              />
+              <span style={{ fontSize: '0.84rem', fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Repeat size={14} color="var(--accent-primary)" />
+                Boleto Mensal Fixo (Ex: Condomínio, Escola, Internet)
+              </span>
+            </label>
+
+            {isRecurring && (
+              <div style={{ marginTop: '0.65rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Repetir pelos próximos:</span>
+                <input
+                  type="number"
+                  min="2"
+                  max="48"
+                  value={recurrenceCount}
+                  onChange={(e) => setRecurrenceCount(e.target.value)}
+                  style={{
+                    width: '65px',
+                    background: 'var(--input-bg)',
+                    border: '1px solid var(--input-border)',
+                    color: 'var(--text-primary)',
+                    padding: '0.4rem',
+                    borderRadius: '8px',
+                    fontSize: '0.82rem',
+                    textAlign: 'center'
+                  }}
+                />
+                <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>meses</span>
+              </div>
+            )}
           </div>
 
           {/* Botão Salvar */}

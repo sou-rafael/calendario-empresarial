@@ -2,8 +2,10 @@ import React from 'react';
 import { supabase } from '../lib/supabase';
 import { format, addDays, isAfter, isBefore, startOfDay } from 'date-fns';
 import { TrendingDown, TrendingUp, AlertCircle, PieChart, Check } from 'lucide-react';
+import { useToast } from './Toast';
 
 export default function MiniDashboard({ bills, currentDate, categories, currentContext, onBillSaved }) {
+  const toast = useToast();
   const currentMonthPrefix = format(currentDate, 'yyyy-MM');
   const currentMonthBills = bills.filter(b => b.date && b.date.startsWith(currentMonthPrefix));
   
@@ -41,9 +43,10 @@ export default function MiniDashboard({ bills, currentDate, categories, currentC
     try {
       const { error } = await supabase.from('bills').update({ status: newStatus }).eq('id', id);
       if (error) throw error;
+      toast.success(newStatus === 'Pago' ? 'Baixa registrada!' : 'Conta reaberta!');
       if (onBillSaved) onBillSaved();
     } catch (err) {
-      alert('Erro ao atualizar status da conta: ' + err.message);
+      toast.error('Erro ao atualizar status da conta: ' + err.message);
     }
   };
 

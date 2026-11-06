@@ -1,6 +1,7 @@
 import React, { useEffect, Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { AuthProvider } from './components/AuthProvider';
+import { ToastProvider } from './components/Toast';
 import ProtectedRoute from './components/ProtectedRoute';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
@@ -83,10 +84,11 @@ function App() {
   return (
     <ErrorBoundary>
       <AuthProvider>
-        <BrowserRouter>
-          <MobileAutoRedirect>
-            <Suspense fallback={<PageLoader />}>
-              <Routes>
+        <ToastProvider>
+          <BrowserRouter>
+            <MobileAutoRedirect>
+              <Suspense fallback={<PageLoader />}>
+                <Routes>
                 {/* Rota dedicada da Landing Page */}
                 <Route path="/landing" element={<LandingPage />} />
 
@@ -148,6 +150,7 @@ function App() {
             </Suspense>
           </MobileAutoRedirect>
         </BrowserRouter>
+        </ToastProvider>
       </AuthProvider>
     </ErrorBoundary>
   );

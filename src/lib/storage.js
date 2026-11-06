@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { compressImageIfNeeded } from '../utils/imageCompressor';
 
 const ALLOWED_MIME_TYPES = [
   'application/pdf',
@@ -20,8 +21,11 @@ const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
  * Valida e faz o upload seguro de um boleto/comprovante para o bucket 'boletos'.
  * Retorna o caminho relativo no storage (filePath) para uso com URLs assinadas.
  */
-export async function uploadBoletoFile(file, userId) {
-  if (!file || !userId) return { filePath: null, fileName: null };
+export async function uploadBoletoFile(rawFile, userId) {
+  if (!rawFile || !userId) return { filePath: null, fileName: null };
+
+  // Otimiza/comprime fotos tiradas no celular ou enviadas em alta resolução
+  const file = await compressImageIfNeeded(rawFile);
 
   if (!ALLOWED_MIME_TYPES.includes(file.type)) {
     throw new Error('Tipo de arquivo não permitido. Envie apenas PDF, JPG, PNG ou WEBP.');

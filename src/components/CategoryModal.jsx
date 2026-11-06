@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { X, Trash2, Plus } from 'lucide-react';
+import { useToast } from './Toast';
 
 export default function CategoryModal({ isOpen, onClose, user, categories, onCategoriesUpdated, currentContext }) {
+  const toast = useToast();
   const [newCategoryName, setNewCategoryName] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -15,28 +17,36 @@ export default function CategoryModal({ isOpen, onClose, user, categories, onCat
     setLoading(true);
     try {
       const { error } = await supabase.from('categories').insert([
-        { user_id: user.id, name: newCategoryName, context: currentContext }
+        { user_id: user.id, name: newCategoryName.trim(), context: currentContext }
       ]);
       if (error) throw error;
       setNewCategoryName('');
+      toast.success('Categoria adicionada com sucesso!');
       onCategoriesUpdated();
     } catch (error) {
-      alert('Erro ao criar categoria: ' + error.message);
+      toast.error('Erro ao criar categoria: ' + error.message);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDeleteCategory = async (id) => {
-    if (!window.confirm('Tem certeza? Isso pode deixar contas existentes sem categoria.')) return;
-    
-    try {
-      const { error } = await supabase.from('categories').delete().eq('id', id);
-      if (error) throw error;
-      onCategoriesUpdated();
-    } catch (error) {
-      alert('Erro ao excluir categoria: ' + error.message);
-    }
+  const handleDeleteCategory = (id) => {
+    toast.confirm({
+      title: 'Excluir Categoria',
+      message: 'Tem certeza? Lançamentos associados a esta categoria ficarão sem categoria vinculada.',
+      confirmText: 'Excluir Categoria',
+      isDanger: true,
+      onConfirm: async () => {
+        try {
+          const { error } = await supabase.from('categories').delete().eq('id', id);
+          if (error) throw error;
+          toast.success('Categoria excluída com sucesso.');
+          onCategoriesUpdated();
+        } catch (error) {
+          toast.error('Erro ao excluir categoria: ' + error.message);
+        }
+      }
+    });
   };
 
   return (

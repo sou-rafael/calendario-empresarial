@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { X, Shield, Calendar, CheckCircle2, Sparkles, Save, Clock } from 'lucide-react';
 import { PLAN_CONFIG, STATUS_CONFIG, FEATURE_LIST } from './adminService';
+import { useToast } from '../../components/Toast';
 
 export default function AdminTenantModal({ isOpen, onClose, tenant, currentUserId, onSave }) {
+  const toast = useToast();
   const [companyName, setCompanyName] = useState('');
   const [systemRole, setSystemRole] = useState('user');
   const [planTier, setPlanTier] = useState('trial');
@@ -70,9 +72,10 @@ export default function AdminTenantModal({ isOpen, onClose, tenant, currentUserI
         features,
         admin_notes: adminNotes.trim()
       });
+      toast.success('Permissões e plano do cliente salvos!');
       onClose();
     } catch (err) {
-      alert('Erro ao salvar alterações do cliente: ' + err.message);
+      toast.error('Erro ao salvar alterações do cliente: ' + err.message);
     } finally {
       setSaving(false);
     }

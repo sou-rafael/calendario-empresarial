@@ -4,19 +4,22 @@ import { supabase } from '../lib/supabase';
 import { openBoletoAttachment } from '../lib/storage';
 import { 
   Mic, UploadCloud, Copy, Check, ExternalLink, Calendar as CalendarIcon, 
-  MessageSquare, Briefcase, User, ChevronRight, AlertCircle, Sparkles, Monitor, Sun, Moon, Square, Lightbulb, Bell, BellOff, BellRing, Shield
+  MessageSquare, Briefcase, User, ChevronRight, AlertCircle, Sparkles, Monitor, Sun, Moon, Square, Lightbulb, Bell, BellOff, BellRing, Shield, Plus
 } from 'lucide-react';
 import { format, isAfter, isToday, parseISO, addDays, subDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
 import BoletoImportModal from '../components/BoletoImportModal';
+import BillModal from '../components/BillModal';
 import VoiceConfirmModal from '../components/VoiceConfirmModal';
 import MobileChatView from '../components/MobileChatView';
 import { useSpeechRecognition } from '../hooks/useSpeechRecognition';
 import { useWebPush } from '../hooks/useWebPush';
 import { parseVoiceExpense } from '../utils/voiceParser';
+import { useToast } from '../components/Toast';
 
 export default function MobilePocket() {
+  const toast = useToast();
   const { user, isSuperAdmin } = useAuth();
   const navigate = useNavigate();
 
@@ -30,6 +33,8 @@ export default function MobilePocket() {
   const [loading, setLoading] = useState(true);
   const [copiedId, setCopiedId] = useState(null);
   const [isBoletoModalOpen, setIsBoletoModalOpen] = useState(false);
+  const [isBillModalOpen, setIsBillModalOpen] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(new Date());
   const [isLightMode, setIsLightMode] = useState(false);
 
   // Estados do fluxo de voz
@@ -178,6 +183,7 @@ export default function MobilePocket() {
     if (!code) return;
     navigator.clipboard.writeText(code.replace(/[^0-9]/g, ''));
     setCopiedId(id);
+    toast.info('Código de barras copiado!');
     setTimeout(() => setCopiedId(null), 3000);
   };
 
@@ -186,9 +192,10 @@ export default function MobilePocket() {
     try {
       const { error } = await supabase.from('bills').update({ status: newStatus }).eq('id', id);
       if (error) throw error;
+      toast.success(newStatus === 'Pago' ? 'Conta marcada como Paga!' : 'Conta reaberta como Pendente.');
       fetchData();
     } catch (err) {
-      alert('Erro ao atualizar status da conta: ' + err.message);
+      toast.error('Erro ao atualizar status da conta: ' + err.message);
     }
   };
 
@@ -497,29 +504,50 @@ export default function MobilePocket() {
               </span>
             )}
 
-            {/* Botão Secundário: Anexar Boleto / PDF */}
-            <button
-              onClick={() => setIsBoletoModalOpen(true)}
-              style={{
-                marginTop: '1.25rem',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '8px',
-                background: 'var(--bg-secondary)',
-                border: '1px solid var(--border-color)',
-                color: 'var(--text-primary)',
-                padding: '0.65rem 1.25rem',
-                borderRadius: '12px',
-                fontSize: '0.82rem',
-                fontWeight: 600,
-                cursor: 'pointer',
-                transition: 'all 0.2s',
-                boxShadow: 'var(--shadow-sm)'
-              }}
-            >
-              <UploadCloud size={16} color="var(--accent-primary)" />
-              <span>Anexar ou Ler PDF do Boleto</span>
-            </button>
+            {/* Botões Secundários: Nova Conta Manual + Anexar Boleto / PDF */}
+            <div style={{ display: 'flex', gap: '8px', marginTop: '1.25rem', flexWrap: 'wrap', justifyContent: 'center' }}>
+              <button
+                onClick={() => {
+                  setSelectedDate(new Date());
+                  setIsBillModalOpen(true);
+                }}
+                className="btn btn-primary"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '0.65rem 1.15rem',
+                  borderRadius: '12px',
+                  fontSize: '0.82rem',
+                  fontWeight: 700
+                }}
+              >
+                <Plus size={16} />
+                <span>Nova Conta</span>
+              </button>
+
+              <button
+                onClick={() => setIsBoletoModalOpen(true)}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  background: 'var(--bg-secondary)',
+                  border: '1px solid var(--border-color)',
+                  color: 'var(--text-primary)',
+                  padding: '0.65rem 1.15rem',
+                  borderRadius: '12px',
+                  fontSize: '0.82rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  boxShadow: 'var(--shadow-sm)'
+                }}
+              >
+                <UploadCloud size={16} color="var(--accent-primary)" />
+                <span>Ler Boleto</span>
+              </button>
+            </div>
           </div>
 
           {/* 3. MINI-LISTA DE PRÓXIMOS VENCIMENTOS */}
@@ -574,7 +602,14 @@ export default function MobilePocket() {
                       gap: '8px',
                       boxShadow: 'var(--shadow-sm)'
                     }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                      <div 
+                        style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', cursor: 'pointer' }}
+                        onClick={() => {
+                          setSelectedDate(billDate);
+                          setIsBillModalOpen(true);
+                        }}
+                        title="Toque para ver detalhes ou editar esta conta"
+                      >
                         <div style={{ flex: 1, minWidth: 0, paddingRight: '8px' }}>
                           <div style={{ 
                             fontWeight: 700, 
@@ -766,6 +801,17 @@ export default function MobilePocket() {
         user={user}
         categories={categories}
         onImportSuccess={fetchData}
+      />
+
+      {/* Modal de Lançamento / Edição Manual */}
+      <BillModal
+        isOpen={isBillModalOpen}
+        onClose={() => setIsBillModalOpen(false)}
+        selectedDate={selectedDate}
+        user={user}
+        categories={categories}
+        bills={bills}
+        onBillSaved={fetchData}
       />
 
     </div>
